@@ -1,0 +1,14 @@
+# macOS metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Custom volume icons
+Icon
+
+# Thumbnails and AppleDouble resource forks
+._*
+
+# Spotlight and Trash indexes
+.Spotlight-V100
+.Trashes
