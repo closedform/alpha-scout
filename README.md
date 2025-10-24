@@ -13,6 +13,7 @@ No crypto content is included or licensed here.
 - `content/prompts/`: canonical templates.
 - `content/prompt-requests/`: generated prompts to feed into LLMs.
 - `content/reports/`: completed write-ups returned by the models.
+- `data/`: optional structured indices (JSONL/CSV) for cataloging alphas.
 - `src/alpha_scout/`: lightweight helpers (Apache-licensed code).
 
 ## Prompts
@@ -27,6 +28,8 @@ No crypto content is included or licensed here.
 - Paste the full template from `content/prompts/alpha-discovery-report.md`.
 - Fill the braces before submitting, e.g. `LIMIT=5`, `SOURCE_NAME=Twitter`, `QUERY_TEXT="equity alpha order flow"`, `START_DATE=2024-07-01`, `END_DATE=2024-07-31`.
 - Add any platform-specific instructions (e.g. “Use the builtin browser to search Twitter with this query; only read posts from @somehandle”) so the model knows how to scope its crawl.
+- Remind the model that each idea must include a `Keywords (comma-separated)` line and an `Expected Horizon Notes` line so you can tag and size backtests quickly.
+- Ask the model to append the structured JSON block at the end of the report (following the template’s schema) so downstream tooling can ingest results automatically.
 
 ### Scoping Best Practices
 - Specify a single platform plus filters: “Search Reddit r/algotrading between 2024-08-01 and 2024-08-31; ignore duplicate cross-posts.”
@@ -42,6 +45,16 @@ No crypto content is included or licensed here.
 - Override filenames with `OUTPUT_BASENAME` in the config or supply an explicit output path as a second argument: `uv run generate-prompt config/twitter-scan.env tmp/my-run.md`.
 - Each uppercase key in the config replaces a matching `{KEY}` token in the template; placeholders with no config value are left untouched so you can fill them manually before sharing with an LLM.
 - Rotate through the provided configs for broader coverage, e.g. `uv run generate-prompt config/kaggle-optiver.env`, `uv run generate-prompt config/twitter-alpha-hunters.env`, `uv run generate-prompt config/reddit-algotrading.env`, `uv run generate-prompt config/github-research.env`, or `uv run generate-prompt config/arxiv-cross-sectional.env`.
+- When a report is complete, run `uv run collect-json --reports-dir content/reports --index data/alpha-index.jsonl` to extract the embedded JSON blocks and append the ideas to the lightweight search index. Add `--dump-json data/json` if you also want individual `.json` snapshots.
+- If you already have a standalone JSON file from an LLM, skip the markdown step and call `uv run append-index path/to/report.json --index data/alpha-index.jsonl`.
+- The indexer computes a SHA-256 hash of each idea’s payload; re-running the command skips ideas already archived so duplicates are not appended.
+
+### Cataloging & Search
+- Drop structured metadata (JSONL or CSV) into `data/` so you can index alphas without a heavyweight database. A simple schema—`{"date": "...", "title": "...", "keywords": [...], "source": "...", "report_path": "..."}`—is enough for filtering.
+- The keyword and expected horizon notes in each report let you group alphas by theme and testing timeline (e.g., order-flow, earnings drift, sentiment; 3y intraday backtest).
+- Consider running a periodic script that parses `content/reports/` and appends entries to `data/alpha-index.jsonl`.
+- The JSON index includes a stable hash identifier (`hash`) for each idea so you can detect repeats or reference the original record succinctly.
+- If you outgrow flat files, the same records can be loaded into SQLite or DuckDB with minimal changes.
 
 ### Compliance & Ethics
 - This repository can hold prompt templates, generated prompt requests, and any downstream reports you commit. Review everything before sharing to ensure it is appropriate for external distribution.

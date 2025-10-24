@@ -1,5 +1,5 @@
-"""Utility helpers for prompt generation."""
+"""Utility helpers for prompt workflows."""
 
-from .generate_prompt import main
+from . import generate_prompt, json_index
 
-__all__ = ["main"]
+__all__ = ["generate_prompt", "json_index"]

@@ -8,6 +8,9 @@
 - Style: No emojis. No questions. No disclaimers. No performance estimates (Sharpe, t-stat, returns). No code unless quoted from a cited source.
 - Deduplication: Merge near-duplicates; keep the most complete citation set.
 - Assessment: Provide a **qualitative** "Strength & Actionability" judgment (e.g., Strong / Promising / Tentative) with a one-line rationale.
+- Keywords: Add a concise comma-separated tag list for each idea (e.g., order-flow, intraday, imbalance).
+- Expected Horizon Notes: Mention how far back to backtest / monitor (e.g., 3y historical intraday data, rolling live for 6 weeks).
+- Output Format: After the markdown sections, append a fenced `json` block containing the structured payload described under **JSON Export Schema**.
 
 ## Controlled Vocabulary
 - **Equity Class:** One of {US Large-Cap, US Mid-Cap, US Small-Cap, US Micro-Cap, Global Developed, Global Emerging, Sector-Specific (specify), Equity ETFs (specify)}.
@@ -59,6 +62,12 @@
 **Strength & Actionability (qualitative only):**  
 <Strong | Promising | Tentative> - <one-line justification focusing on originality, clarity, testability, frictions/liquidity>
 
+**Keywords (comma-separated):**  
+<order-flow, imbalance, intraday, ...>
+
+**Expected Horizon Notes:**  
+<e.g., backtest 2018-2024 intraday data; live monitor 4 weeks before deployment>
+
 **Citations:**  
 - <link 1 with short description>  
 - <link 2 with short description>
@@ -92,6 +101,12 @@
 **Strength & Actionability (qualitative only):**  
 <...>
 
+**Keywords (comma-separated):**  
+<...>
+
+**Expected Horizon Notes:**  
+<...>
+
 **Citations:**  
 - <...>
 
@@ -123,6 +138,12 @@
 **Strength & Actionability (qualitative only):**  
 <...>
 
+**Keywords (comma-separated):**  
+<...>
+
+**Expected Horizon Notes:**  
+<...>
+
 **Citations:**  
 - <...>
 
@@ -131,3 +152,41 @@
 ## Notes on Deduplication
 - If multiple sources present the same idea, consolidate under a single "Alpha Idea" and list all supporting links.  
 - If sources present meaningful variants (different features/horizons/universes), keep separate entries and clarify distinctions in "Core Idea" and "Feature Transformations".
+
+---
+
+## JSON Export Schema (append after the markdown sections)
+```
+```json
+{
+  "meta": {
+    "source_searched": "...",
+    "query": "...",
+    "scan_window": "...",
+    "exclusions": ["..."],
+    "report_date": "YYYY-MM-DD"
+  },
+  "ideas": [
+    {
+      "title": "...",
+      "verification_status": "...",
+      "equity_class": "...",
+      "horizon": "...",
+      "signal_type": "...",
+      "core_idea": "...",
+      "feature_transformations": ["...", "..."],
+      "data_dependencies": ["...", "..."],
+      "universe_filters": "...",
+      "directionality": "...",
+      "strength_actionability": {
+        "rating": "Strong | Promising | Tentative",
+        "rationale": "..."
+      },
+      "keywords": ["order-flow", "intraday", "..."],
+      "expected_horizon_notes": "...",
+      "citations": ["https://...", "https://..."]
+    }
+  ]
+}
+```
+```
