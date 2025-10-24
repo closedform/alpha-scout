@@ -2,6 +2,8 @@
 
 Collecting alpha from online sources.
 
+This repo provides a lightweight workflow for spinning up LLM-friendly discovery prompts, harvesting structured results, and cataloging equity alpha ideas. Extend it by dropping new prompt templates under `content/prompts/`, adding `.env` configs in `config/`, or wiring additional processors in `src/alpha_scout/tools/` to transform reports into whatever downstream format you need.
+
 ## License
 - Code (`/src` and subfolders): licensed under Apache License 2.0 (see `LICENSE-CODE`). You must retain copyright notices and the `NOTICE` file and include prominent notices in any files you modify.
 - Content (`/content`, including alpha write-ups, schemas, and docs): licensed under CC BY 4.0 (see `LICENSE-CONTENT`). You must provide attribution and indicate if changes were made to the content.
@@ -15,6 +17,11 @@ No crypto content is included or licensed here.
 - `content/reports/`: completed write-ups returned by the models.
 - `data/`: optional structured indices (JSONL/CSV) for cataloging alphas.
 - `src/alpha_scout/`: lightweight helpers (Apache-licensed code).
+
+## Workflow Overview
+- Create or tweak `.env` configs in `config/` to target new surfaces.
+- Run `uv run generate-prompt config/<name>.env` to produce a dated prompt in `content/prompt-requests/` and paste it into your LLM.
+- Save completed reports (with embedded JSON) under `content/reports/`, then run `uv run collect-json --reports-dir content/reports --index data/alpha-index.jsonl` to update the catalog.
 
 ## Prompts
 - Use `content/prompts/alpha-discovery-report.md` as the standard template for equity alpha discovery runs.
