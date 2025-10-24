@@ -12,3 +12,9 @@ Icon
 # Spotlight and Trash indexes
 .Spotlight-V100
 .Trashes
+
+# Python artifacts
+__pycache__/
+*.pyc
+.venv/
+src/*.egg-info/

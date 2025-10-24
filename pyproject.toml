@@ -1,0 +1,14 @@
+[project]
+name = "alpha-scout"
+version = "0.1.0"
+description = "Lightweight helpers for managing alpha-scout prompt workflows."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+generate-prompt = "alpha_scout.tools.generate_prompt:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"

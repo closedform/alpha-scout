@@ -8,11 +8,19 @@ Collecting alpha from online sources.
 
 No crypto content is included or licensed here.
 
+## Structure
+- `config/`: reusable run configurations (`.env` style).
+- `content/prompts/`: canonical templates.
+- `content/prompt-requests/`: generated prompts to feed into LLMs.
+- `content/reports/`: completed write-ups returned by the models.
+- `src/alpha_scout/`: lightweight helpers (Apache-licensed code).
+
 ## Prompts
 - Use `content/prompts/alpha-discovery-report.md` as the standard template for equity alpha discovery runs.
+- Store generated prompt requests under `content/prompt-requests/` (the helper in `src/alpha_scout/tools/` creates this automatically).
 
 ## Reports
-- Archive completed alpha discovery results under `content/reports/`.
+- Archive completed alpha discovery results under `content/reports/`. Keep LLM-ready prompt requests separate in `content/prompt-requests/` so it is clear what still needs to be executed.
 
 ## Using the Alpha Discovery Prompt
 - Launch a web-enabled LLM such as GPT-4.1 with browsing or Gemini Advanced and open a fresh chat.
@@ -29,12 +37,13 @@ No crypto content is included or licensed here.
 
 ### Automating Prompt Runs
 - Store reusable run parameters under `config/` (see `config/twitter-scan.env` for an example).
-- Generate a dated prompt markdown with `scripts/generate_prompt.sh config/twitter-scan.env`. The script writes to `content/reports/` by default and prepends `### YYYYMMDD <Config Title>` to the file.
-- Override filenames with `OUTPUT_BASENAME` in the config or pass a second argument to the script for an explicit output path.
-- Each uppercase key in the config replaces a matching `{KEY}` token in the template; placeholders with no config value are left untouched so you can fill them manually.
+- Use `uv run generate-prompt config/twitter-scan.env` to emit a dated prompt request. `uv` reads `pyproject.toml`, builds an isolated environment, and exposes the `generate-prompt` console script.
+- The generated markdown lands in `content/prompt-requests/` by default and starts with `### YYYYMMDD <Config Title>` for quick cataloging.
+- Override filenames with `OUTPUT_BASENAME` in the config or supply an explicit output path as a second argument: `uv run generate-prompt config/twitter-scan.env tmp/my-run.md`.
+- Each uppercase key in the config replaces a matching `{KEY}` token in the template; placeholders with no config value are left untouched so you can fill them manually before sharing with an LLM.
 
 ### Compliance & Ethics
-- This repository contains public-domain prompts and blank templates only; you control the data you send to any LLM.
+- This repository can hold prompt templates, generated prompt requests, and any downstream reports you commit. Review everything before sharing to ensure it is appropriate for external distribution.
 - If you are affiliated with a regulated firm (e.g. hedge fund, broker-dealer), confirm with your compliance team before sending non-public or client-related information to external services. Some firms require pre-cleared tooling or VPN routing, even on personal time.
 - Avoid copying material that is proprietary or under NDA into third-party models; stick to publicly available sources.
 - Nothing here is legal advice—follow your employer and regulator policies first.
