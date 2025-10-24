@@ -2,69 +2,51 @@
 
 Collecting alpha from online sources.
 
-This repo provides a lightweight workflow for spinning up LLM-friendly discovery prompts, harvesting structured results, and cataloging equity alpha ideas. Extend it by dropping new prompt templates under `content/prompts/`, adding `.env` configs in `config/`, or wiring additional processors in `src/alpha_scout/tools/` to transform reports into whatever downstream format you need.
+Lean tooling for drafting LLM prompts, capturing structured reports, and cataloging equity alpha ideas. Extend it with new templates in `content/prompts/`, configs in `config/`, or processing helpers in `src/alpha_scout/tools/`.
+
+## Directory Layout
+- `config/` – ENV parameter sets for different searches.
+- `content/prompts/` – reusable prompt templates (markdown).
+- `content/prompt-requests/` – generated prompts ready to paste into an LLM.
+- `content/reports/` – completed write-ups (markdown + JSON block).
+- `data/` – lightweight indexes such as `alpha-index.jsonl`.
+- `src/alpha_scout/` – CLI helpers (`generate-prompt`, `collect-json`, `append-index`).
+
+## Basic Usage
+```bash
+# 1) Generate a prompt from a config
+uv run generate-prompt config/twitter-scan.env
+
+# 2) Paste the markdown file from content/prompt-requests/ into an LLM
+#    (fill placeholders, remind the model to include keywords, horizon notes, JSON)
+
+# 3) Save the response under content/reports/<date>-<slug>.md
+
+# 4) Ingest the ideas into the index
+uv run collect-json --reports-dir content/reports --index data/alpha-index.jsonl
+
+# Optional: ingest a standalone JSON file
+uv run append-index results/report.json --index data/alpha-index.jsonl
+```
+
+## Prompt & Scoping Tips
+- Run one surface at a time and spell out filters (date range, handles, keywords).
+- Keep `LIMIT` to what you intend to review unless you want a deep sweep.
+- Ask the model for a brief "discarded ideas" log when transparency matters.
+- Provide curated links when you only need synthesis rather than exploration.
+
+## Cataloging & Search
+- `collect-json` extracts the fenced JSON payload and appends SHA-256 deduped ideas to `data/alpha-index.jsonl`.
+- Keywords and expected-horizon notes make it easy to group alphas by theme and testing effort.
+- Stick with flat files for quick filtering; move to SQLite/DuckDB if you need heavier analytics.
+
+## Compliance & Ethics
+- Do not send proprietary or client data to external LLMs without approval.
+- Templates and tools are generic; review every report before sharing.
+- Nothing here is legal advice—follow employer and regulator policies first.
 
 ## License
-- Code (`/src` and subfolders): licensed under Apache License 2.0 (see `LICENSE-CODE`). You must retain copyright notices and the `NOTICE` file and include prominent notices in any files you modify.
-- Content (`/content`, including alpha write-ups, schemas, and docs): licensed under CC BY 4.0 (see `LICENSE-CONTENT`). You must provide attribution and indicate if changes were made to the content.
+- Code (`/src` and subfolders): Apache License 2.0 (`LICENSE-CODE`).
+- Content (`/content`): CC BY 4.0 (`LICENSE-CONTENT`).
 
 No crypto content is included or licensed here.
-
-## Structure
-- `config/`: reusable run configurations (`.env` style) such as `twitter-scan.env`, `kaggle-optiver.env`, `twitter-alpha-hunters.env`, `reddit-algotrading.env`, `github-research.env`, and `arxiv-cross-sectional.env`.
-- `content/prompts/`: canonical templates.
-- `content/prompt-requests/`: generated prompts to feed into LLMs.
-- `content/reports/`: completed write-ups returned by the models.
-- `data/`: optional structured indices (JSONL/CSV) for cataloging alphas.
-- `src/alpha_scout/`: lightweight helpers (Apache-licensed code).
-
-## Workflow Overview
-- Create or tweak `.env` configs in `config/` to target new surfaces.
-- Run `uv run generate-prompt config/<name>.env` to produce a dated prompt in `content/prompt-requests/` and paste it into your LLM.
-- Save completed reports (with embedded JSON) under `content/reports/`, then run `uv run collect-json --reports-dir content/reports --index data/alpha-index.jsonl` to update the catalog.
-
-## Prompts
-- Use `content/prompts/alpha-discovery-report.md` as the standard template for equity alpha discovery runs.
-- Generate a ready-to-copy request with `uv run generate-prompt config/<name>.env`, then paste the resulting markdown from `content/prompt-requests/` into your model. (The helper in `src/alpha_scout/tools/` maintains that folder automatically.)
-
-## Reports
-- Archive completed alpha discovery results under `content/reports/`. Keep LLM-ready prompt requests separate in `content/prompt-requests/` so it is clear what still needs to be executed.
-
-## Using the Alpha Discovery Prompt
-- Launch a web-enabled LLM such as GPT-4.1 with browsing or Gemini Advanced and open a fresh chat.
-- Paste the full template from `content/prompts/alpha-discovery-report.md`.
-- Fill the braces before submitting, e.g. `LIMIT=5`, `SOURCE_NAME=Twitter`, `QUERY_TEXT="equity alpha order flow"`, `START_DATE=2024-07-01`, `END_DATE=2024-07-31`.
-- Add any platform-specific instructions (e.g. “Use the builtin browser to search Twitter with this query; only read posts from @somehandle”) so the model knows how to scope its crawl.
-- Remind the model that each idea must include a `Keywords (comma-separated)` line and an `Expected Horizon Notes` line so you can tag and size backtests quickly.
-- Ask the model to append the structured JSON block at the end of the report (following the template’s schema) so downstream tooling can ingest results automatically.
-
-### Scoping Best Practices
-- Specify a single platform plus filters: “Search Reddit r/algotrading between 2024-08-01 and 2024-08-31; ignore duplicate cross-posts.”
-- Provide keyword and account whitelists/blacklists to keep the run focused.
-- Cap `LIMIT` to a workable number (3–5) so the model spends more effort vetting each idea.
-- Remind the model to document ignored candidates (“Log discarded ideas in a scratchpad”) when you need transparency.
-- When you already have raw links, feed them in via a quick bulleted list and ask the model to synthesize rather than re-searching the web.
-
-### Automating Prompt Runs
-- Store reusable run parameters under `config/` (see `config/twitter-scan.env` for an example).
-- Generate a prompt request with `uv run generate-prompt config/twitter-scan.env`. `uv` reads `pyproject.toml`, builds an isolated environment, and exposes the `generate-prompt` console script.
-- Open the freshly created markdown in `content/prompt-requests/`, fill any remaining braces, and copy/paste it into your web-enabled LLM session.
-- Override filenames with `OUTPUT_BASENAME` in the config or supply an explicit output path as a second argument: `uv run generate-prompt config/twitter-scan.env tmp/my-run.md`.
-- Each uppercase key in the config replaces a matching `{KEY}` token in the template; placeholders with no config value are left untouched so you can fill them manually before sharing with an LLM.
-- Rotate through the provided configs for broader coverage, e.g. `uv run generate-prompt config/kaggle-optiver.env`, `uv run generate-prompt config/twitter-alpha-hunters.env`, `uv run generate-prompt config/reddit-algotrading.env`, `uv run generate-prompt config/github-research.env`, or `uv run generate-prompt config/arxiv-cross-sectional.env`.
-- When a report is complete, run `uv run collect-json --reports-dir content/reports --index data/alpha-index.jsonl` to extract the embedded JSON blocks and append the ideas to the lightweight search index. Add `--dump-json data/json` if you also want individual `.json` snapshots.
-- If you already have a standalone JSON file from an LLM, skip the markdown step and call `uv run append-index path/to/report.json --index data/alpha-index.jsonl`.
-- The indexer computes a SHA-256 hash of each idea’s payload; re-running the command skips ideas already archived so duplicates are not appended.
-
-### Cataloging & Search
-- Drop structured metadata (JSONL or CSV) into `data/` so you can index alphas without a heavyweight database. A simple schema—`{"date": "...", "title": "...", "keywords": [...], "source": "...", "report_path": "..."}`—is enough for filtering.
-- The keyword and expected horizon notes in each report let you group alphas by theme and testing timeline (e.g., order-flow, earnings drift, sentiment; 3y intraday backtest).
-- Consider running a periodic script that parses `content/reports/` and appends entries to `data/alpha-index.jsonl`.
-- The JSON index includes a stable hash identifier (`hash`) for each idea so you can detect repeats or reference the original record succinctly.
-- If you outgrow flat files, the same records can be loaded into SQLite or DuckDB with minimal changes.
-
-### Compliance & Ethics
-- This repository can hold prompt templates, generated prompt requests, and any downstream reports you commit. Review everything before sharing to ensure it is appropriate for external distribution.
-- If you are affiliated with a regulated firm (e.g. hedge fund, broker-dealer), confirm with your compliance team before sending non-public or client-related information to external services. Some firms require pre-cleared tooling or VPN routing, even on personal time.
-- Avoid copying material that is proprietary or under NDA into third-party models; stick to publicly available sources.
-- Nothing here is legal advice—follow your employer and regulator policies first.
