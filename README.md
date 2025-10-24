@@ -4,14 +4,6 @@ Collecting alpha from online sources.
 
 Lean tooling for drafting LLM prompts, capturing structured reports, and cataloging equity alpha ideas. Extend it with new templates in `content/prompts/`, configs in `config/`, or processing helpers in `src/alpha_scout/tools/`.
 
-## Directory Layout
-- `config/` – ENV parameter sets for different searches.
-- `content/prompts/` – reusable prompt templates (markdown).
-- `content/prompt-requests/` – generated prompts ready to paste into an LLM.
-- `content/reports/` – completed write-ups (markdown + JSON block).
-- `data/` – lightweight indexes such as `alpha-index.jsonl`.
-- `src/alpha_scout/` – CLI helpers (`generate-prompt`, `collect-json`, `append-index`).
-
 ## Basic Usage
 ```bash
 # 1) Generate a prompt from a config
@@ -28,6 +20,14 @@ uv run collect-json --reports-dir content/reports --index data/alpha-index.jsonl
 # Optional: ingest a standalone JSON file
 uv run append-index results/report.json --index data/alpha-index.jsonl
 ```
+
+## Directory Layout
+- `config/` – ENV parameter sets for different searches.
+- `content/prompts/` – reusable prompt templates (markdown).
+- `content/prompt-requests/` – generated prompts ready to paste into an LLM.
+- `content/reports/` – completed write-ups (markdown + JSON block).
+- `data/` – lightweight indexes such as `alpha-index.jsonl`.
+- `src/alpha_scout/` – CLI helpers (`generate-prompt`, `collect-json`, `append-index`).
 
 ## Prompt & Scoping Tips
 - Run one surface at a time and spell out filters (date range, handles, keywords).
