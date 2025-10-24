@@ -27,6 +27,12 @@ No crypto content is included or licensed here.
 - Remind the model to document ignored candidates (“Log discarded ideas in a scratchpad”) when you need transparency.
 - When you already have raw links, feed them in via a quick bulleted list and ask the model to synthesize rather than re-searching the web.
 
+### Automating Prompt Runs
+- Store reusable run parameters under `config/` (see `config/twitter-scan.env` for an example).
+- Generate a dated prompt markdown with `scripts/generate_prompt.sh config/twitter-scan.env`. The script writes to `content/reports/` by default and prepends `### YYYYMMDD <Config Title>` to the file.
+- Override filenames with `OUTPUT_BASENAME` in the config or pass a second argument to the script for an explicit output path.
+- Each uppercase key in the config replaces a matching `{KEY}` token in the template; placeholders with no config value are left untouched so you can fill them manually.
+
 ### Compliance & Ethics
 - This repository contains public-domain prompts and blank templates only; you control the data you send to any LLM.
 - If you are affiliated with a regulated firm (e.g. hedge fund, broker-dealer), confirm with your compliance team before sending non-public or client-related information to external services. Some firms require pre-cleared tooling or VPN routing, even on personal time.
