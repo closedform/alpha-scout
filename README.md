@@ -9,7 +9,7 @@ Collecting alpha from online sources.
 No crypto content is included or licensed here.
 
 ## Structure
-- `config/`: reusable run configurations (`.env` style).
+- `config/`: reusable run configurations (`.env` style) such as `twitter-scan.env`, `kaggle-optiver.env`, `twitter-alpha-hunters.env`, `reddit-algotrading.env`, `github-research.env`, and `arxiv-cross-sectional.env`.
 - `content/prompts/`: canonical templates.
 - `content/prompt-requests/`: generated prompts to feed into LLMs.
 - `content/reports/`: completed write-ups returned by the models.
@@ -41,6 +41,7 @@ No crypto content is included or licensed here.
 - The generated markdown lands in `content/prompt-requests/` by default and starts with `### YYYYMMDD <Config Title>` for quick cataloging.
 - Override filenames with `OUTPUT_BASENAME` in the config or supply an explicit output path as a second argument: `uv run generate-prompt config/twitter-scan.env tmp/my-run.md`.
 - Each uppercase key in the config replaces a matching `{KEY}` token in the template; placeholders with no config value are left untouched so you can fill them manually before sharing with an LLM.
+- Rotate through the provided configs for broader coverage, e.g. `uv run generate-prompt config/kaggle-optiver.env`, `uv run generate-prompt config/twitter-alpha-hunters.env`, `uv run generate-prompt config/reddit-algotrading.env`, `uv run generate-prompt config/github-research.env`, or `uv run generate-prompt config/arxiv-cross-sectional.env`.
 
 ### Compliance & Ethics
 - This repository can hold prompt templates, generated prompt requests, and any downstream reports you commit. Review everything before sharing to ensure it is appropriate for external distribution.
