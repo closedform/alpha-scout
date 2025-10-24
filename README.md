@@ -18,7 +18,7 @@ No crypto content is included or licensed here.
 
 ## Prompts
 - Use `content/prompts/alpha-discovery-report.md` as the standard template for equity alpha discovery runs.
-- Store generated prompt requests under `content/prompt-requests/` (the helper in `src/alpha_scout/tools/` creates this automatically).
+- Generate a ready-to-copy request with `uv run generate-prompt config/<name>.env`, then paste the resulting markdown from `content/prompt-requests/` into your model. (The helper in `src/alpha_scout/tools/` maintains that folder automatically.)
 
 ## Reports
 - Archive completed alpha discovery results under `content/reports/`. Keep LLM-ready prompt requests separate in `content/prompt-requests/` so it is clear what still needs to be executed.
@@ -40,8 +40,8 @@ No crypto content is included or licensed here.
 
 ### Automating Prompt Runs
 - Store reusable run parameters under `config/` (see `config/twitter-scan.env` for an example).
-- Use `uv run generate-prompt config/twitter-scan.env` to emit a dated prompt request. `uv` reads `pyproject.toml`, builds an isolated environment, and exposes the `generate-prompt` console script.
-- The generated markdown lands in `content/prompt-requests/` by default and starts with `### YYYYMMDD <Config Title>` for quick cataloging.
+- Generate a prompt request with `uv run generate-prompt config/twitter-scan.env`. `uv` reads `pyproject.toml`, builds an isolated environment, and exposes the `generate-prompt` console script.
+- Open the freshly created markdown in `content/prompt-requests/`, fill any remaining braces, and copy/paste it into your web-enabled LLM session.
 - Override filenames with `OUTPUT_BASENAME` in the config or supply an explicit output path as a second argument: `uv run generate-prompt config/twitter-scan.env tmp/my-run.md`.
 - Each uppercase key in the config replaces a matching `{KEY}` token in the template; placeholders with no config value are left untouched so you can fill them manually before sharing with an LLM.
 - Rotate through the provided configs for broader coverage, e.g. `uv run generate-prompt config/kaggle-optiver.env`, `uv run generate-prompt config/twitter-alpha-hunters.env`, `uv run generate-prompt config/reddit-algotrading.env`, `uv run generate-prompt config/github-research.env`, or `uv run generate-prompt config/arxiv-cross-sectional.env`.
