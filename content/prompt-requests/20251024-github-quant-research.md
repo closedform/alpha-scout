@@ -1,4 +1,4 @@
-### 20251024 Twitter Order Flow Sweep
+### 20251024 GitHub Quant Research Sweep
 
 # Alpha Discovery Report (Equities Only)
 
@@ -29,8 +29,8 @@
 
 # Report Meta
 - **Source Searched:** {SOURCE_NAME or URL}
-- **Query / Filters:** equity alpha
-- **Scan Window:** 2017-01-01 - 2025-12-31
+- **Query / Filters:** equity alpha research feature engineering orderbook fundamentals repo
+- **Scan Window:** 2012-01-01 - 2025-10-24
 - **Exclusions Applied:** Crypto and digital assets
 - **Date of Report:** {YYYY-MM-DD}
 
