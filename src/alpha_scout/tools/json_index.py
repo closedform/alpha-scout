@@ -112,8 +112,8 @@ def main() -> None:
     parser.add_argument(
         "--index",
         type=Path,
-        default=Path("data/alpha-index.jsonl"),
-        help="Path to the JSONL index file (default: data/alpha-index.jsonl).",
+        default=Path("content/data/alpha-index.jsonl"),
+        help="Path to the JSONL index file (default: content/data/alpha-index.jsonl).",
     )
     parser.add_argument(
         "--report-path",

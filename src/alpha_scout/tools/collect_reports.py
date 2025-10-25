@@ -5,8 +5,8 @@ from __future__ import annotations
 import argparse
 import json
 import re
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 from typing import Iterable, List, Set
 
 from . import json_index
@@ -87,8 +87,8 @@ def main() -> None:
     parser.add_argument(
         "--index",
         type=Path,
-        default=Path("data/alpha-index.jsonl"),
-        help="JSONL index path (default: data/alpha-index.jsonl).",
+        default=Path("content/data/alpha-index.jsonl"),
+        help="JSONL index path (default: content/data/alpha-index.jsonl).",
     )
     parser.add_argument(
         "--dump-json",
@@ -103,8 +103,8 @@ def main() -> None:
     parser.add_argument(
         "--log-file",
         type=Path,
-        default=Path("data/collect-log.txt"),
-        help="Append warnings and extraction errors here (default: data/collect-log.txt).",
+        default=Path("content/data/collect-log.txt"),
+        help="Append warnings and extraction errors here (default: content/data/collect-log.txt).",
     )
 
     args = parser.parse_args()

@@ -15,10 +15,10 @@ uv run generate-prompt config/twitter-scan.env
 # 3) Save the response under content/reports/<date>-<slug>.md
 
 # 4) Ingest the ideas into the index
-uv run collect-json --reports-dir content/reports --index data/alpha-index.jsonl
+uv run collect-json --reports-dir content/reports --index content/data/alpha-index.jsonl
 
 # Optional: ingest a standalone JSON file
-uv run append-index results/report.json --index data/alpha-index.jsonl
+uv run append-index results/report.json --index content/data/alpha-index.jsonl
 ```
 
 ## Directory Layout
@@ -36,7 +36,7 @@ uv run append-index results/report.json --index data/alpha-index.jsonl
 - Provide curated links when you only need synthesis rather than exploration.
 
 ## Cataloging & Search
-- `collect-json` extracts the fenced JSON payload and appends SHA-256 deduped ideas to `data/alpha-index.jsonl`.
+- `collect-json` extracts the fenced JSON payload and appends SHA-256 deduped ideas to `content/data/alpha-index.jsonl`.
 - Keywords and expected-horizon notes make it easy to group alphas by theme and testing effort.
 - Stick with flat files for quick filtering; move to SQLite/DuckDB if you need heavier analytics.
 
@@ -46,7 +46,7 @@ uv run append-index results/report.json --index data/alpha-index.jsonl
 - Nothing here is legal advice—follow employer and regulator policies first.
 
 ## Troubleshooting
-- Review `data/collect-log.txt` after running `uv run collect-json` to see any reports that could not be ingested.
+- Review `content/data/collect-log.txt` after running `uv run collect-json` to see any reports that could not be ingested.
 - If a report needs repair, generate a fix-it prompt with `uv run --module alpha_scout.tools.report_fix_prompt --report <path/to/report.md> --error "<collect-json message>"` and feed it to an LLM to regenerate clean markdown and JSON.
 
 ## License
