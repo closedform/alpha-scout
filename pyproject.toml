@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Lightweight helpers for managing alpha-scout prompt workflows."
 readme = "README.md"
 requires-python = ">=3.11"
+license = { file = "LICENSE" }
 dependencies = []
 
 [project.scripts]

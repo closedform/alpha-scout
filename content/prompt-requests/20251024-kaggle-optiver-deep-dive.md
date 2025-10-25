@@ -9,9 +9,9 @@
 - Sources: Provide direct links for each idea (tweet, notebook, paper, repo). If multiple posts in a thread support the same idea, include all links.
 - Style: No emojis. No questions. No disclaimers. No performance estimates (Sharpe, t-stat, returns). No code unless quoted from a cited source.
 - Deduplication: Merge near-duplicates; keep the most complete citation set.
-- Assessment: Provide a **qualitative** "Strength & Actionability" judgment (e.g., Strong / Promising / Tentative) with a one-line rationale.
+- Assessment: Provide a **qualitative** "Strength & Actionability" judgment (e.g., Strong / Promising / Tentative) with a one-line rationale that emphasizes how novel or underutilized the alpha is, plus any quick notes on practicality.
 - Keywords: Add a concise comma-separated tag list for each idea (e.g., order-flow, intraday, imbalance).
-- Expected Horizon Notes: Mention how far back to backtest / monitor (e.g., 3y historical intraday data, rolling live for 6 weeks).
+- Expected Horizon Notes: Briefly describe the intended holding horizon and exit cadence (e.g., hold through next open, exit within 2 sessions, roll monthly); avoid backtest timelines or implementation schedules.
 - Output Format: After the markdown sections, append a fenced `json` block containing the structured payload described under **JSON Export Schema**.
 
 ## Controlled Vocabulary
@@ -62,13 +62,16 @@
 <Long or Short bias; cross-sectional ranking vs. threshold; neutralization (e.g., beta/industry); holding and exit cues>
 
 **Strength & Actionability (qualitative only):**  
-<Strong | Promising | Tentative> - <one-line justification focusing on originality, clarity, testability, frictions/liquidity>
+<Strong | Promising | Tentative> - <one-line justification focusing on novelty/under-the-radar nature and practical deployability>
+
+**Strength Score (1-10):**  
+<Integer; 10 = extremely novel/under-discovered, 1 = standard factor baseline>
 
 **Keywords (comma-separated):**  
 <order-flow, imbalance, intraday, ...>
 
 **Expected Horizon Notes:**  
-<e.g., backtest 2018-2024 intraday data; live monitor 4 weeks before deployment>
+<e.g., hold through next open; fade within 2 sessions; maintain position for 1-3 months with monthly rebalance>
 
 **Citations:**  
 - <link 1 with short description>  
@@ -101,7 +104,11 @@
 <...>
 
 **Strength & Actionability (qualitative only):**  
-<...>
+<Strong | Promising | Tentative> - <one-line justification focusing on novelty/under-the-radar nature and practical deployability>
+
+**Strength Score (1-10):**  
+<Integer; 10 = extremely novel/under-discovered, 1 = standard factor baseline>
+
 
 **Keywords (comma-separated):**  
 <...>
@@ -138,7 +145,11 @@
 <...>
 
 **Strength & Actionability (qualitative only):**  
-<...>
+<Strong | Promising | Tentative> - <one-line justification focusing on novelty/under-the-radar nature and practical deployability>
+
+**Strength Score (1-10):**  
+<Integer; 10 = extremely novel/under-discovered, 1 = standard factor baseline>
+
 
 **Keywords (comma-separated):**  
 <...>

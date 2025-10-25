@@ -3,7 +3,7 @@ title: alpha-scout
 message: Please cite this repository if you use the alphas or code.
 authors:
   - family-names: D.
-    given-names: Brian
+    given-names: Brandon
 repository-code: https://github.com/alpha-scout/alpha-scout
-license: Apache-2.0 (code), CC-BY-4.0 (content)
+license: MIT
 date-released: 2025-10-24

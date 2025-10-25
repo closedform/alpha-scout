@@ -50,8 +50,6 @@ uv run append-index results/report.json --index content/data/alpha-index.jsonl
 - If a report needs repair, generate a fix-it prompt with `uv run --module alpha_scout.tools.report_fix_prompt --report <path/to/report.md> --error "<collect-json message>"` and feed it to an LLM to regenerate clean markdown and JSON.
 
 ## License
-- Code (`/src` and subfolders): Apache License 2.0 (`LICENSE-CODE`).
-- Content (`/content`): CC BY 4.0 (`LICENSE-CONTENT`).
+- Entire project: MIT License (`LICENSE`).
 
 No crypto content is included or licensed here.
-
