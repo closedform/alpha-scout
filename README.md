@@ -45,8 +45,13 @@ uv run append-index results/report.json --index data/alpha-index.jsonl
 - Templates and tools are generic; review every report before sharing.
 - Nothing here is legal advice—follow employer and regulator policies first.
 
+## Troubleshooting
+- Review `data/collect-log.txt` after running `uv run collect-json` to see any reports that could not be ingested.
+- If a report needs repair, generate a fix-it prompt with `uv run --module alpha_scout.tools.report_fix_prompt --report <path/to/report.md> --error "<collect-json message>"` and feed it to an LLM to regenerate clean markdown and JSON.
+
 ## License
 - Code (`/src` and subfolders): Apache License 2.0 (`LICENSE-CODE`).
 - Content (`/content`): CC BY 4.0 (`LICENSE-CONTENT`).
 
 No crypto content is included or licensed here.
+

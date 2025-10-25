@@ -1,0 +1,691 @@
+{
+  "meta": {
+    "source_searched": "GitHub",
+    "query": "equity alpha research feature engineering orderbook fundamentals repo",
+    "scan_window": "2012-01-01 - 2025-10-24",
+    "exclusions": [
+      "Crypto and digital assets"
+    ],
+    "report_date": "2025-10-24"
+  },
+  "ideas": [
+    {
+      "title": "LOB Microprice–Midprice Divergence (sub-minute drift)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Microprice (size-weighted best bid/ask) diverging from midquote reflects latent pressure from the dominant side of the book; the divergence tends to resolve via short-horizon price moves.",
+      "feature_transformations": [
+        "Microprice vs midquote difference; rolling z-score over 60–300 ticks",
+        "Top-of-book volume imbalance with EWMA smoothing (λ≈0.1)",
+        "Spread/volatility regime filter"
+      ],
+      "data_dependencies": [
+        "NBBO L1",
+        "optional L2 depth",
+        "trades/quotes (ITCH)",
+        "timestamps"
+      ],
+      "universe_filters": "US large-cap; price > $5; ADV > $20M; spread ≤ 2 ticks; exclude halts and first/last 5 minutes",
+      "directionality": "Cross-sectional rank; long positive z-scores, short negative; beta/industry neutral; exit on reversion or 60–600s time-stop",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Clear mechanism, public formulas, liquid universe and standard replay/backtest workflow"
+      },
+      "keywords": [
+        "microprice",
+        "order-book",
+        "imbalance",
+        "ITCH",
+        "intraday"
+      ],
+      "expected_horizon_notes": "Backtest 2018–2025 full-tick; 6 weeks live monitoring for execution/slippage calibration",
+      "citations": [
+        "https://github.com/mansoor-mamnoon/ml-orderbook",
+        "https://github.com/nicolezattarin/LOB-feature-analysis",
+        "https://github.com/yhf2007/LimitOrderBook_NeuralNetwork"
+      ]
+    },
+    {
+      "title": "Top-of-Book Queue Imbalance (directional lead)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Sustained queue imbalance at the touch anticipates near-term directional prints as one side of the book depletes faster.",
+      "feature_transformations": [
+        "Queue imbalance ratio across L1–L5; EWMA(2–5s)",
+        "Microtrend filter using short midquote slope",
+        "Spread-widening suppressor"
+      ],
+      "data_dependencies": [
+        "NBBO",
+        "L2 depth",
+        "trade prints"
+      ],
+      "universe_filters": "High-liquidity US names; spread=1 tick majority of day; ADV > $10M",
+      "directionality": "Threshold entries (|QIR|>0.6), exit ≤60s or on reversion; beta-hedged intraday",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Well-documented imbalance mechanic; execution latency is primary friction"
+      },
+      "keywords": [
+        "queue-imbalance",
+        "microstructure",
+        "L1/L2",
+        "intraday"
+      ],
+      "expected_horizon_notes": "Intraday 2019–2025; validate with market replay",
+      "citations": [
+        "https://github.com/nicolezattarin/LOB-feature-analysis",
+        "https://github.com/alpacahq/example-hftish"
+      ]
+    },
+    {
+      "title": "Order-Flow Imbalance (OFI) & Impact Micro Alpha",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Volume-time aggregated signed order-flow imbalance predicts short-horizon price impact; normalize by spread/volatility for cross-name comparability.",
+      "feature_transformations": [
+        "OFI over fixed volume buckets; rolling z-score",
+        "Spread-normalized OFI = OFI / spread (ticks)",
+        "Volume-time bars to stabilize event intensity"
+      ],
+      "data_dependencies": [
+        "Trades",
+        "Quotes",
+        "ITCH or exchange feeds"
+      ],
+      "universe_filters": "S&P 500; price> $10; ADV > $30M",
+      "directionality": "Enter on OFI z>2 (long) or <−2 (short); time-stop 30–180s; avoid earnings windows",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Public parsers and clear transforms; robust on liquid names"
+      },
+      "keywords": [
+        "OFI",
+        "volume-bars",
+        "impact",
+        "intraday"
+      ],
+      "expected_horizon_notes": "2018–2025 ITCH; 1-month paper trade",
+      "citations": [
+        "https://github.com/shubhamcodez/Market-Impact-Model",
+        "https://github.com/bbalouki/itch"
+      ]
+    },
+    {
+      "title": "VPIN (Flow Toxicity) + Quote Imbalance Spike",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "High VPIN percentiles, especially with concurrent quote imbalance, flag informed-flow regimes and directional pressure.",
+      "feature_transformations": [
+        "VPIN in volume-time; 80th percentile regime flag",
+        "EWMA quote imbalance (2–5 min)",
+        "Conjunction rule: VPIN high & |imb|>0.4"
+      ],
+      "data_dependencies": [
+        "Trades (signed)",
+        "Quotes"
+      ],
+      "universe_filters": "Mega/large caps; exclude auctions",
+      "directionality": "Trade with net flow direction; scale down in wide spread regimes",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Open implementation; needs careful trade-sign logic"
+      },
+      "keywords": [
+        "VPIN",
+        "toxicity",
+        "imbalance",
+        "intraday"
+      ],
+      "expected_horizon_notes": "2017–2025; 4-week shadow",
+      "citations": [
+        "https://github.com/theopenstreet/VPIN_HFT"
+      ]
+    },
+    {
+      "title": "NASDAQ Closing Auction Imbalance (Optiver TAC)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Event-Driven",
+      "core_idea": "Large market-on-close imbalance relative to typical auction volume drives predictable pressure into the cross and partial mean-reversion after.",
+      "feature_transformations": [
+        "Imbalance% vs median auction volume",
+        "Indicative match price drift vs intraday VWAP",
+        "Imbalance flip counts in last 10 minutes"
+      ],
+      "data_dependencies": [
+        "NASDAQ auction fields",
+        "L1 quotes",
+        "intraday prints"
+      ],
+      "universe_filters": "NASDAQ 100 + liquid mid/large caps; exclude thin auctions",
+      "directionality": "Trade with imbalance into 15:59; fade partially post-cross; beta-hedged",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Public dataset and feature recipes enable precise replication"
+      },
+      "keywords": [
+        "MOC",
+        "auction",
+        "imbalance",
+        "close",
+        "intraday"
+      ],
+      "expected_horizon_notes": "2020–2023 dataset; extend to 2024–2025 live",
+      "citations": [
+        "https://github.com/liyiyan128/optiver-trading-at-the-close"
+      ]
+    },
+    {
+      "title": "Stock–Synthetic Index Residual Mispricing at the Close",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Event-Driven",
+      "core_idea": "Reconstruct synthetic index weights intraday; trade single-name residual vs index into the cross when imbalance is large.",
+      "feature_transformations": [
+        "Intraday regression to infer stock weight in synthetic index",
+        "Residual z-score in last 15 min",
+        "Interaction with imbalance sign"
+      ],
+      "data_dependencies": [
+        "Intraday returns",
+        "auction data",
+        "index synthetic"
+      ],
+      "universe_filters": "NASDAQ 100; exclude rebalance/earnings",
+      "directionality": "Long underperforming residuals (same-sign imbalance); short outperformers",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Clear RV construction; execution key"
+      },
+      "keywords": [
+        "close",
+        "residual",
+        "synthetic-index",
+        "auction"
+      ],
+      "expected_horizon_notes": "Align with TAC sample; forward test 6 weeks",
+      "citations": [
+        "https://github.com/liyiyan128/optiver-trading-at-the-close"
+      ]
+    },
+    {
+      "title": "Post‑Earnings Announcement Drift (SUE-ranked)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Mid-Cap",
+      "horizon": "1-4 Weeks",
+      "signal_type": "Event-Driven",
+      "core_idea": "Cross-sectional ranking on standardized earnings surprises shows persistent post-event drift as investors update slowly.",
+      "feature_transformations": [
+        "SUE over 8 quarters",
+        "Abnormal volume ratio on event day",
+        "Guidance-uncertainty penalty"
+      ],
+      "data_dependencies": [
+        "IBES estimates",
+        "CRSP prices",
+        "earnings calendar"
+      ],
+      "universe_filters": "US names with >3 analysts; price>$5",
+      "directionality": "Long top SUE decile; short bottom; hold 10–20 days; industry neutral",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Multiple public pipelines enable replication"
+      },
+      "keywords": [
+        "earnings",
+        "SUE",
+        "event",
+        "drift"
+      ],
+      "expected_horizon_notes": "2000–2025; 8-week live monitor",
+      "citations": [
+        "https://github.com/mcravi8/PEAD-mini-WRDS",
+        "https://github.com/gen-li/Replicate_PEAD",
+        "https://github.com/tradermonty/earnings-trade-backtest"
+      ]
+    },
+    {
+      "title": "Analyst EPS Revisions Momentum (IBES)",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-Cap",
+      "horizon": "1-6 Months",
+      "signal_type": "Fundamental",
+      "core_idea": "3‑month net EPS estimate revisions predict forward returns as allocators rebalance toward improving names.",
+      "feature_transformations": [
+        "ΔConsensus EPS(3M) scaled; analyst quality weights",
+        "Sector-neutral z-scores",
+        "Interaction with 12–1 momentum"
+      ],
+      "data_dependencies": [
+        "IBES",
+        "CRSP",
+        "sector classification"
+      ],
+      "universe_filters": "≥5 analysts; mcap > $1B",
+      "directionality": "Monthly long–short; beta/industry neutral",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Toolkit eases WRDS workflows; well-documented factor"
+      },
+      "keywords": [
+        "analyst-revisions",
+        "fundamental",
+        "cross-sectional"
+      ],
+      "expected_horizon_notes": "2003–2025 monthly; 3 months live",
+      "citations": [
+        "https://github.com/Feng-CityUHK/EquityCharacteristics"
+      ]
+    },
+    {
+      "title": "Earnings Call LM Lexicon Net Tone",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "1-5 Days",
+      "signal_type": "Sentiment",
+      "core_idea": "Net positive tone in call transcripts (LM dictionaries) predicts short-horizon drift; adjust for event severity and guidance mentions.",
+      "feature_transformations": [
+        "Net tone = (pos − neg)/tokens",
+        "Speaker-weighted scoring (CEO/CFO emphasis)",
+        "Event abnormal volume filter"
+      ],
+      "data_dependencies": [
+        "Transcripts",
+        "LM lexicon",
+        "prices"
+      ],
+      "universe_filters": "S&P 1500; English transcripts",
+      "directionality": "Long high-tone; short low-tone; 1–3 day hold",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Open pipeline from scrape to backtest"
+      },
+      "keywords": [
+        "earnings-call",
+        "lexicon",
+        "sentiment"
+      ],
+      "expected_horizon_notes": "2015–2025; 2 seasons live",
+      "citations": [
+        "https://github.com/personal-coding/Stock-Earnings-Call-Transcript-Natural-Language-Processing"
+      ]
+    },
+    {
+      "title": "FinBERT Q&A Negativity Differential",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "1-5 Days",
+      "signal_type": "Sentiment",
+      "core_idea": "Q&A sentiment more negative than prepared remarks signals unexpected concerns; short-term underperformance ensues.",
+      "feature_transformations": [
+        "FinBERT sentiment for Q&A vs prepared",
+        "Guidance keyword interaction",
+        "CAR[−1,+1] control"
+      ],
+      "data_dependencies": [
+        "Transcripts",
+        "FinBERT",
+        "prices"
+      ],
+      "universe_filters": "S&P 500",
+      "directionality": "Short large negative spread; long positive",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Clear, testable differential; public model"
+      },
+      "keywords": [
+        "FinBERT",
+        "earnings-call",
+        "sentiment"
+      ],
+      "expected_horizon_notes": "2018–2025; 2 seasons",
+      "citations": [
+        "https://github.com/ProsusAI/finBERT",
+        "https://github.com/cdubiel08/Earnings-Calls-NLP"
+      ]
+    },
+    {
+      "title": "Overnight News Sentiment Factor",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Overnight",
+      "signal_type": "Sentiment",
+      "core_idea": "Aggregate prior-evening news sentiment into a cross-sectional alpha vector predicting open-to-open returns.",
+      "feature_transformations": [
+        "Headline/body sentiment z-scored by 60D",
+        "Attention control via sqrt(news_count)",
+        "Sector residualization"
+      ],
+      "data_dependencies": [
+        "News feed",
+        "prices"
+      ],
+      "universe_filters": "S&P 500; exclude earnings",
+      "directionality": "Daily long–short at close; hedge beta",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Data feed stability required; template exists"
+      },
+      "keywords": [
+        "overnight",
+        "news",
+        "sentiment"
+      ],
+      "expected_horizon_notes": "2015–2025; 6-week live",
+      "citations": [
+        "https://github.com/yukit-k/ai-for-trading"
+      ]
+    },
+    {
+      "title": "One-Day Reversal (Volume-Conditioned)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "1-3 Days",
+      "signal_type": "Mean-Reversion",
+      "core_idea": "Fade extreme 1D moves when volume is elevated and no event is present; mean-reversion in liquidity shocks.",
+      "feature_transformations": [
+        "r1D/ATR(20) and Vol_ratio vs 20D",
+        "Exclude earnings/news days",
+        "Exit on VWAP cross or 2 days"
+      ],
+      "data_dependencies": [
+        "OHLCV",
+        "news flags"
+      ],
+      "universe_filters": "S&P 1500; ADV > $2M",
+      "directionality": "Long worst decile; short best decile; sector-neutral",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Robust baseline with public templates"
+      },
+      "keywords": [
+        "mean-reversion",
+        "volume",
+        "short-term"
+      ],
+      "expected_horizon_notes": "2005–2025; 4-week pilot",
+      "citations": [
+        "https://github.com/yukit-k/ai-for-trading"
+      ]
+    },
+    {
+      "title": "52‑Week High Breakout (Trend Persistence)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Mid-Cap",
+      "horizon": "1-4 Weeks",
+      "signal_type": "Momentum",
+      "core_idea": "Names breaking 52‑week highs with confirming breadth/volume continue to attract flows; filter false breakouts.",
+      "feature_transformations": [
+        "Close > 252D max * (1+ε)",
+        "Up-day breadth and volume confirmations",
+        "False-breakout guard via recent drawdown"
+      ],
+      "data_dependencies": [
+        "OHLCV"
+      ],
+      "universe_filters": "US ex-microcaps; price>$5",
+      "directionality": "Enter on breakout; ATR trailing stops; sector caps",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Clear transforms; open notebook"
+      },
+      "keywords": [
+        "momentum",
+        "breakout",
+        "52-week-high"
+      ],
+      "expected_horizon_notes": "2000–2025; 2 months",
+      "citations": [
+        "https://github.com/StevenDowney86/Public_Research_and_Backtests"
+      ]
+    },
+    {
+      "title": "Turn-of-the-Month / Payday Seasonality (ETFs)",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "Equity ETFs (SPY/QQQ/IWM)",
+      "horizon": "1-5 Days",
+      "signal_type": "Seasonality/Calendar",
+      "core_idea": "Index ETFs show month-end/start and payday flow patterns; exploit with short windows and risk filters.",
+      "feature_transformations": [
+        "Calendar dummy windows around month-end",
+        "Volatility regime interaction",
+        "Exclude macro/FOMC days"
+      ],
+      "data_dependencies": [
+        "ETF OHLCV",
+        "calendar"
+      ],
+      "universe_filters": "High AUM ETFs",
+      "directionality": "Long around turn; flatten in high VIX",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Effect size time-varying; trivial to test"
+      },
+      "keywords": [
+        "seasonality",
+        "ETF",
+        "flows",
+        "calendar"
+      ],
+      "expected_horizon_notes": "1994–2025; 2 months",
+      "citations": [
+        "https://github.com/paperswithbacktest/awesome-systematic-trading"
+      ]
+    },
+    {
+      "title": "Insider Cluster Buys (Form 4)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Small-Cap",
+      "horizon": "1-4 Weeks",
+      "signal_type": "Event-Driven",
+      "core_idea": "Multiple insider open-market buys within 30 days scaled by float predict positive drift.",
+      "feature_transformations": [
+        "Scaled insider buy value / float cap",
+        "Cluster count and role weights",
+        "Exclude 10b5-1/option-related"
+      ],
+      "data_dependencies": [
+        "SEC Form 4",
+        "float",
+        "prices"
+      ],
+      "universe_filters": "US price>$3; ADV>$1M",
+      "directionality": "Long high scaled cluster buys; 20D hold",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Open scrapers and filters available"
+      },
+      "keywords": [
+        "insiders",
+        "Form4",
+        "event",
+        "drift"
+      ],
+      "expected_horizon_notes": "2012–2025; 2 months live",
+      "citations": [
+        "https://github.com/StevenAdema/sec4-filings-scanner",
+        "https://gist.github.com/firmai/0e2bd233af4a0406a6b2fe4a4a4e1e8b",
+        "https://github.com/bellingcat/EDGAR"
+      ]
+    },
+    {
+      "title": "Short Interest / Days-to-Cover Shock",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "Global Developed",
+      "horizon": "1-4 Weeks",
+      "signal_type": "Event-Driven",
+      "core_idea": "Spikes in days-to-cover and borrow costs predict squeezes after positive catalysts and negative drift absent catalysts.",
+      "feature_transformations": [
+        "ΔDays-to-cover z-score (3M)",
+        "Borrow fee percentile",
+        "Catalyst filter (earnings/MA)"
+      ],
+      "data_dependencies": [
+        "Short interest",
+        "volume",
+        "borrow fee",
+        "prices"
+      ],
+      "universe_filters": "Price>$5",
+      "directionality": "Two-sided conditional on catalyst",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Data availability/quality dependent; examples exist"
+      },
+      "keywords": [
+        "short-interest",
+        "borrow",
+        "squeeze"
+      ],
+      "expected_horizon_notes": "2014–2025; 6 weeks",
+      "citations": [
+        "https://github.com/ay-mich/asxshorts-examples",
+        "https://github.com/jaycode/short_sale_volume"
+      ]
+    },
+    {
+      "title": "Value Investors Club Publication Attention Effect",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Mid-Cap",
+      "horizon": "1-4 Weeks",
+      "signal_type": "Alternative Data",
+      "core_idea": "VIC posts—especially winners—induce short-horizon attention flows; trade in thesis direction over limited windows.",
+      "feature_transformations": [
+        "Event time from post; winner flag",
+        "Abnormal turnover on T+1",
+        "Optional text sentiment of thesis"
+      ],
+      "data_dependencies": [
+        "VIC posts",
+        "prices/volume"
+      ],
+      "universe_filters": "Liquid US names; exclude illiquid microcaps",
+      "directionality": "Enter at publish; hold 5–20 sessions; hedge beta",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Open analysis suggests concentrated effect"
+      },
+      "keywords": [
+        "attention",
+        "VIC",
+        "event"
+      ],
+      "expected_horizon_notes": "2008–2024; 2 months",
+      "citations": [
+        "https://github.com/dschonholtz/ValueInvestorsClub"
+      ]
+    },
+    {
+      "title": "Accruals Anomaly (Low Accruals → Higher Returns)",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-Cap",
+      "horizon": "1-6 Months",
+      "signal_type": "Fundamental",
+      "core_idea": "Low total accruals scaled by assets signal higher earnings quality and subsequent returns; combine with profitability for robustness.",
+      "feature_transformations": [
+        "Total accruals formula (scaled)",
+        "Sector-neutral ranks; winsorize outliers",
+        "Composite with profitability and investment"
+      ],
+      "data_dependencies": [
+        "Compustat",
+        "prices"
+      ],
+      "universe_filters": "Ex-financials/REITs; mcap>$1B",
+      "directionality": "Quarterly long low-accruals; short high",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Canonical, simple to reproduce"
+      },
+      "keywords": [
+        "accruals",
+        "quality",
+        "fundamental"
+      ],
+      "expected_horizon_notes": "1990–2025; 2 quarters",
+      "citations": [
+        "https://github.com/paperswithbacktest/awesome-systematic-trading"
+      ]
+    },
+    {
+      "title": "Gross Profitability & Quality Composite",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Global Developed",
+      "horizon": "1-6 Months",
+      "signal_type": "Cross-Sectional Composite",
+      "core_idea": "Blend gross profitability, leverage, and earnings stability into a sector-neutral composite; tilt toward high-quality names.",
+      "feature_transformations": [
+        "GP/A, ROA, leverage, accrual quality",
+        "Rank-average; volatility scaling",
+        "Turnover penalty"
+      ],
+      "data_dependencies": [
+        "Financial statements",
+        "ratios",
+        "prices"
+      ],
+      "universe_filters": "Mid/Large caps; ex-financials if leverage used",
+      "directionality": "Quarterly long top-quality; short bottom",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Public toolkits and notebooks cover required metrics"
+      },
+      "keywords": [
+        "quality",
+        "profitability",
+        "composite"
+      ],
+      "expected_horizon_notes": "1990–2025; 2 quarters",
+      "citations": [
+        "https://github.com/JerBouma/FinanceToolkit",
+        "https://github.com/ArturSepp/QuantInvestStrats"
+      ]
+    },
+    {
+      "title": "GTJA‑191 Technical Factor Ensemble",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Global Developed",
+      "horizon": "1-4 Weeks",
+      "signal_type": "Cross-Sectional Composite",
+      "core_idea": "Rank-blend a diversified subset of GTJA‑191 technical alphas (VWAP/HL/volume nonlinears); sector-neutral with turnover controls.",
+      "feature_transformations": [
+        "Select ~20 low-correlation GTJA signals",
+        "Rank-average with vol scaling",
+        "Sector/beta neutralization; weekly rebalance"
+      ],
+      "data_dependencies": [
+        "OHLCV",
+        "VWAP",
+        "corporate actions"
+      ],
+      "universe_filters": "Top 1000 by ADV; price>$3",
+      "directionality": "Weekly long–short composite",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Open implementations; flexible ensemble design"
+      },
+      "keywords": [
+        "GTJA-191",
+        "technical",
+        "composite"
+      ],
+      "expected_horizon_notes": "2010–2025; 8 weeks paper",
+      "citations": [
+        "https://github.com/shrektan/techfactor",
+        "https://github.com/microsoft/qlib"
+      ]
+    }
+  ],
+  "_report_path": "content/reports/20251024-github-quant-research-gpt-5-pro.md"
+}

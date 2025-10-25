@@ -6,6 +6,7 @@ import argparse
 import json
 import re
 from pathlib import Path
+from datetime import datetime
 from typing import Iterable, List, Set
 
 from . import json_index
@@ -13,11 +14,48 @@ from . import json_index
 JSON_BLOCK = re.compile(r"```json\s*(\{.*?\})\s*```", re.DOTALL | re.IGNORECASE)
 
 
+def _fallback_json(markdown: str) -> str | None:
+    """Attempt to extract a JSON object when no fenced block exists."""
+
+    anchor = markdown.lower().rfind("json export schema")
+    region = markdown[anchor:] if anchor != -1 else markdown
+
+    idx = region.find("{")
+    while idx != -1:
+        depth = 0
+        end = None
+        for offset, char in enumerate(region[idx:], start=idx):
+            if char == "{":
+                depth += 1
+            elif char == "}":
+                depth -= 1
+                if depth == 0:
+                    end = offset
+                    break
+
+        if end is not None:
+            candidate = region[idx:end + 1].strip()
+            if candidate:
+                try:
+                    json.loads(candidate)
+                    return candidate
+                except json.JSONDecodeError:
+                    pass
+
+        idx = region.find("{", idx + 1)
+
+    return None
+
+
 def find_json_block(markdown: str) -> str:
     matches = JSON_BLOCK.findall(markdown)
-    if not matches:
+    if matches:
+        return matches[-1]
+
+    fallback = _fallback_json(markdown)
+    if fallback is None:
         raise ValueError("No JSON block found in markdown report.")
-    return matches[-1]
+    return fallback
 
 
 def parse_report(markdown_path: Path) -> dict:
@@ -62,6 +100,12 @@ def main() -> None:
         action="store_true",
         help="Fail on first report that cannot be parsed (default: skip with warning).",
     )
+    parser.add_argument(
+        "--log-file",
+        type=Path,
+        default=Path("data/collect-log.txt"),
+        help="Append warnings and extraction errors here (default: data/collect-log.txt).",
+    )
 
     args = parser.parse_args()
 
@@ -76,6 +120,7 @@ def main() -> None:
     processed_reports = 0
     dumped_reports = 0
     skipped: List[Path] = []
+    log_entries: List[str] = []
 
     dump_dir = args.dump_json
     if dump_dir is not None:
@@ -107,6 +152,8 @@ def main() -> None:
             if args.strict:
                 raise
             skipped.append(path)
+            message = f"{datetime.utcnow().isoformat()}Z\t{path}\t{exc}"
+            log_entries.append(message)
             print(f"Skipping {path}: {exc}")
 
     appended_count = 0
@@ -123,7 +170,15 @@ def main() -> None:
     if dump_dir is not None:
         print(f"Wrote {dumped_reports} JSON files to {dump_dir}.")
     if skipped:
-        print(f"Skipped {len(skipped)} reports (see logs).")
+        print(f"Skipped {len(skipped)} reports.")
+
+    if log_entries:
+        log_path = args.log_file
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        with log_path.open("a", encoding="utf-8") as log_file:
+            for entry in log_entries:
+                log_file.write(entry + "\n")
+        print(f"Logged {len(log_entries)} issue(s) to {log_path}.")
 
 
 if __name__ == "__main__":

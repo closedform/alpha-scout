@@ -1,0 +1,587 @@
+{
+  "meta": {
+    "source_searched": "Reddit (r/algotrading, r/quantfinance)",
+    "query": "r/algotrading OR r/quantfinance OR “quant equity alpha” “feature transform” OR “signal design”",
+    "scan_window": "2014-01-01 - 2025-10-24",
+    "exclusions": [
+      "Crypto and digital assets"
+    ],
+    "report_date": "2025-10-24"
+  },
+  "ideas": [
+    {
+      "title": "Opening-5m Relative-Volume Breakout (Top-20, ATR Stop)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Mid-Cap",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Screen first 5-minute bar relative volume versus prior 14 sessions, trade in bar direction with ATR stop, end-of-day exit. Rank and take top K names to concentrate exposure.",
+      "feature_transformations": [
+        "RelVol_5m = vol_9:30–9:35 / mean(vol_9:30–9:35, 14d)",
+        "Direction = sign(close_9:35 − open_9:30)",
+        "Stop = x·ATR(14); EOD forced exit"
+      ],
+      "data_dependencies": [
+        "Intraday OHLCV (1–5m)",
+        "ATR",
+        "Auction timestamps"
+      ],
+      "universe_filters": "US stocks; price > $5; ADV > $3M; exclude ADRs/halts",
+      "directionality": "Long/short per breakout; cross-sectional; beta/industry neutralization",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Clear triggers and exits; ample liquidity open-to-midday."
+      },
+      "keywords": [
+        "opening",
+        "relative-volume",
+        "breakout",
+        "ATR",
+        "intraday"
+      ],
+      "expected_horizon_notes": "Backtest 2018–2025 intraday; 6-week live paper",
+      "citations": [
+        "https://www.reddit.com/r/algotrading/comments/1dhs545/has_anyone_reviewed_this_paper_on_an_opening/"
+      ]
+    },
+    {
+      "title": "Opening Range Breakout (ORB-15)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Momentum",
+      "core_idea": "Define 9:30–9:45 range; enter on close beyond range before noon; stop at opposite range; fixed R-multiple target.",
+      "feature_transformations": [
+        "OpeningRange = [High, Low] of 9:30–9:45",
+        "Breakout confirmation = bar close beyond range",
+        "Time filter 9:45–12:00; TP=1.5·risk"
+      ],
+      "data_dependencies": [
+        "Intraday OHLCV (15m/5m)"
+      ],
+      "universe_filters": "SPX; price > $10; ADV > $10M; exclude earnings/halts",
+      "directionality": "Directional per breakout; K positions; optional ADX trend filter",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Simple, liquid, and widely testable."
+      },
+      "keywords": [
+        "opening",
+        "breakout",
+        "trend",
+        "intraday",
+        "ORB"
+      ],
+      "expected_horizon_notes": "Backtest 2015–2025; 4-week live dry-run",
+      "citations": [
+        "https://www.reddit.com/r/algotrading/comments/1j9pxsr/backtest_results_for_the_opening_range_breakout/"
+      ]
+    },
+    {
+      "title": "IBS + Lower-Band Mean Reversion (Daily)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Equity ETFs (specify)",
+      "horizon": "1-5 Days",
+      "signal_type": "Mean-Reversion",
+      "core_idea": "Long when IBS < 0.3 and close under a volatility-scaled lower band; exit once close > prior day high.",
+      "feature_transformations": [
+        "IBS = (C−L)/(H−L)",
+        "Range proxy = mean(H−L, 25d)",
+        "LowerBand = High_10 − 2.5×RangeProxy"
+      ],
+      "data_dependencies": [
+        "Daily OHLC"
+      ],
+      "universe_filters": "SPY/QQQ; or top N large-caps by ADV",
+      "directionality": "Long-only; scale by IBS z-score; optional VIX filter",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Explicit rules; minimal data footprint."
+      },
+      "keywords": [
+        "IBS",
+        "mean-reversion",
+        "volatility-band",
+        "ETF",
+        "daily"
+      ],
+      "expected_horizon_notes": "Backtest 2005–2025; walk-forward 2015–2025",
+      "citations": [
+        "https://www.reddit.com/r/algotrading/comments/1cwsco8/a_mean_reversion_strategy_with_211_sharpe/"
+      ]
+    },
+    {
+      "title": "Close-Near-Low Next-Day Bounce",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Overnight",
+      "signal_type": "Mean-Reversion",
+      "core_idea": "If close is within bottom 20% of the day’s range, buy at the close and exit next session (open or close).",
+      "feature_transformations": [
+        "RangePctClose = (C−L)/(H−L) ≤ 0.2",
+        "Optional prior-day negative intraday return filter",
+        "Exit at D+1 close"
+      ],
+      "data_dependencies": [
+        "Daily OHLC",
+        "Auction access"
+      ],
+      "universe_filters": "SPX; price > $5; ADV > $5M; earnings blackout",
+      "directionality": "Long-only; beta-hedged",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Very simple trigger; auction-compatible."
+      },
+      "keywords": [
+        "mean-reversion",
+        "range-position",
+        "overnight",
+        "auction"
+      ],
+      "expected_horizon_notes": "Backtest 2010–2025; live 8 weeks",
+      "citations": [
+        "https://www.reddit.com/r/algotrading/comments/ni1zuj/backtesting_a_close_near_low_strategy/"
+      ]
+    },
+    {
+      "title": "Connors RSI(2) with Trend Filter",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "1-3 Days",
+      "signal_type": "Mean-Reversion",
+      "core_idea": "Enter long when RSI(2) < 5 with price above SMA(200); exit when RSI recovers or price exceeds yday high.",
+      "feature_transformations": [
+        "RSI(2) < 5",
+        "SMA(200) filter",
+        "Exit RSI(2) > 65 or C > H_yday"
+      ],
+      "data_dependencies": [
+        "Daily OHLC",
+        "RSI",
+        "SMAs"
+      ],
+      "universe_filters": "SPX/NDX; price > $5; ADV > $5M",
+      "directionality": "Cross-sectional long ranking by RSI(2)",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Standardized and reproducible rules."
+      },
+      "keywords": [
+        "RSI2",
+        "mean-reversion",
+        "filter",
+        "cross-sectional"
+      ],
+      "expected_horizon_notes": "Backtest 2000–2025",
+      "citations": [
+        "https://www.reddit.com/r/algotrading/comments/1b6ow5k/backtest_results_for_connors_rsi2/"
+      ]
+    },
+    {
+      "title": "Close→Open Overnight Drift Capture",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Equity ETFs (specify)",
+      "horizon": "Overnight",
+      "signal_type": "Seasonality/Calendar",
+      "core_idea": "Exploit structural overnight premium by buying at close (MOC) and selling next open (MOO), filtered by prior intraday return and VIX regime.",
+      "feature_transformations": [
+        "Overnight RO = log(O_{t+1}/C_t)",
+        "Filter RI < 0",
+        "VIX percentile gating"
+      ],
+      "data_dependencies": [
+        "Daily OHLC",
+        "Auction support"
+      ],
+      "universe_filters": "SPY/QQQ; extend to sector ETFs",
+      "directionality": "Long-only; risk caps near macro events",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Widely observed; execution-critical but feasible."
+      },
+      "keywords": [
+        "overnight",
+        "drift",
+        "MOC",
+        "MOO",
+        "ETF"
+      ],
+      "expected_horizon_notes": "Backtest 1993–2025; live 4 weeks",
+      "citations": [
+        "https://www.reddit.com/r/algotrading/comments/bc898w/buying_close_selling_open_backtesting/",
+        "https://www.reddit.com/r/algotrading/comments/o5hpr5/buying_on_open_and_selling_on_close_vs_opposite/"
+      ]
+    },
+    {
+      "title": "Regime-Based Overnight Mean-Reversion (Leveraged ETFs)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Equity ETFs (specify)",
+      "horizon": "Overnight",
+      "signal_type": "Cross-Sectional Composite",
+      "core_idea": "Use MA/VIX regime classification and historical overnight response by ticker/regime to buy leveraged ETFs near close and exit at open.",
+      "feature_transformations": [
+        "Regime via SPX MAs + VIX",
+        "Intraday shock magnitude rank",
+        "Bayesian overnight probability per ticker & regime"
+      ],
+      "data_dependencies": [
+        "Daily OHLC",
+        "VIX",
+        "ETF lists"
+      ],
+      "universe_filters": "US leveraged equity ETFs; ADV filter",
+      "directionality": "Long/short per reversion expectation",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Explicit workflow; adequate capacity."
+      },
+      "keywords": [
+        "overnight",
+        "regime",
+        "leveraged-ETFs",
+        "mean-reversion"
+      ],
+      "expected_horizon_notes": "Backtest 2015–2025; 8-week forward test",
+      "citations": [
+        "https://www.reddit.com/r/algotrading/comments/1ob5xao/built_a_regimebased_overnight_mean_reversion/"
+      ]
+    },
+    {
+      "title": "Post-Earnings Surprise Long Basket (15-Day Hold)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Small-Cap",
+      "horizon": "1-4 Weeks",
+      "signal_type": "Event-Driven",
+      "core_idea": "Daily rebalance into prior-day reporters with EPS ≥ +15% vs consensus and positive 10-day momentum; hold 15 trading days.",
+      "feature_transformations": [
+        "Surprise % = (Actual−Est)/|Est|",
+        "Momentum = 10d return > 0",
+        "Sector-neutral z-score rank"
+      ],
+      "data_dependencies": [
+        "Earnings actual/estimate",
+        "Calendar",
+        "Daily OHLC"
+      ],
+      "universe_filters": "US stocks/ADRs; cap > $50M; price > $3; ADV > $1M",
+      "directionality": "Long-only; cap 10 names",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Concrete rule set and hold window."
+      },
+      "keywords": [
+        "earnings",
+        "PEAD",
+        "small-cap",
+        "event-driven",
+        "momentum-filter"
+      ],
+      "expected_horizon_notes": "Backtest 2010–2025; live one season",
+      "citations": [
+        "https://www.reddit.com/r/algotrading/comments/9cm4d0/do_the_rewards_outweigh_the_risks_with_this/"
+      ]
+    },
+    {
+      "title": "3σ Intraday Drop → Multihorizon Rebound",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Mid-Cap",
+      "horizon": "1-3 Days",
+      "signal_type": "Mean-Reversion",
+      "core_idea": "Trigger on ≤ −3σ intraday move vs 20-day intraday σ; long into close or next open; ladder exits at D+1/D+5/D+21.",
+      "feature_transformations": [
+        "Shock = (C−O)/σ_{20,intraday}",
+        "VIX regime filter",
+        "Exit ladder across horizons"
+      ],
+      "data_dependencies": [
+        "Intraday OHLCV",
+        "Realized σ",
+        "Earnings calendar"
+      ],
+      "universe_filters": "Price > $5; ADV > $2M",
+      "directionality": "Long-biased; beta hedge",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Clear trigger; execution/overnight controls needed."
+      },
+      "keywords": [
+        "intraday",
+        "mean-reversion",
+        "shock",
+        "volatility"
+      ],
+      "expected_horizon_notes": "Backtest 2018–2025 intraday",
+      "citations": [
+        "https://www.reddit.com/r/algotrading/comments/13myyoq/developing_a_method_backtest_on_mean_reversion_in/"
+      ]
+    },
+    {
+      "title": "Two-Bar HH/LL Reversal (Daily Trigger)",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-Cap",
+      "horizon": "1-5 Days",
+      "signal_type": "Momentum",
+      "core_idea": "Flag day with both LL and LH vs prior day; enter next day on break above that bar’s high (mirror short).",
+      "feature_transformations": [
+        "Weak bar detection (LL & LH)",
+        "Trigger = High_t+1 > High_t",
+        "Exit by R multiple"
+      ],
+      "data_dependencies": [
+        "Daily OHLC"
+      ],
+      "universe_filters": "SPX; earnings blackout",
+      "directionality": "Long/short per trigger",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Simple rules; requires filters to avoid noise."
+      },
+      "keywords": [
+        "reversal",
+        "HH/LL",
+        "trigger",
+        "daily"
+      ],
+      "expected_horizon_notes": "Backtest 2005–2025",
+      "citations": [
+        "https://www.reddit.com/r/algotrading/comments/1f8v70e/backtest_results_for_a_simple_reversal_strategy/"
+      ]
+    },
+    {
+      "title": "Turn-of-Month (ToM) Equity Bias",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "Equity ETFs (specify)",
+      "horizon": "1-5 Days",
+      "signal_type": "Seasonality/Calendar",
+      "core_idea": "Long LTD→TD+3 each month to capture start/end month flows; avoid macro/earnings clusters.",
+      "feature_transformations": [
+        "Calendar window [LTD, TD+3]",
+        "VIX percentile gating",
+        "Trailing stop on fail"
+      ],
+      "data_dependencies": [
+        "Trading calendar",
+        "Daily OHLC",
+        "VIX"
+      ],
+      "universe_filters": "SPY, IWM",
+      "directionality": "Long-only; position caps",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Known anomaly; must confirm persistence post-2015."
+      },
+      "keywords": [
+        "seasonality",
+        "turn-of-month",
+        "ETF"
+      ],
+      "expected_horizon_notes": "Backtest 1993–2025",
+      "citations": [
+        "https://www.reddit.com/r/algotrading/comments/1550ofu/would_it_make_sense_to_first_test_an_underlying/",
+        "https://www.reddit.com/r/algotrading/comments/8lezo0/a_list_of_26_stock_market_anomalies_and_investing/"
+      ]
+    },
+    {
+      "title": "OPEX Flow Skew (Monthly Expiry)",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "Equity ETFs (specify)",
+      "horizon": "1-3 Days",
+      "signal_type": "Event-Driven",
+      "core_idea": "Exploit dealer hedging unwinds around monthly OPEX via short pre-OPEX or long post-OPEX resets within a tight window.",
+      "feature_transformations": [
+        "Window TD−3→TD0",
+        "IV/term-structure shift proxy",
+        "Macro overlap filter"
+      ],
+      "data_dependencies": [
+        "Options calendar",
+        "ETF OHLC",
+        "IV summary"
+      ],
+      "universe_filters": "SPY/QQQ",
+      "directionality": "Directional; size via IV regime",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Mechanism plausible; requires IV proxies for gating."
+      },
+      "keywords": [
+        "OPEX",
+        "dealer-hedging",
+        "seasonality",
+        "ETF"
+      ],
+      "expected_horizon_notes": "Backtest 2016–2025; live 3 months",
+      "citations": [
+        "https://www.reddit.com/r/algotrading/comments/pa4xmz/does_anyone_know_why_this_consistent_midmonth_dip/"
+      ]
+    },
+    {
+      "title": "Institutional Rebalance Front-Run (60/40 & Index Rebalances)",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "Sector-Specific (specify)",
+      "horizon": "1-4 Weeks",
+      "signal_type": "Event-Driven",
+      "core_idea": "Pre-position for index adds/deletes and 60/40 rebalancing flows based on rule-based previews and historical flow windows.",
+      "feature_transformations": [
+        "Add/Delete probability from index rules",
+        "ETF flow/creation-redemption proxies",
+        "Event window entry/exit offsets"
+      ],
+      "data_dependencies": [
+        "Index methodology & calendars",
+        "ETF holdings/flows"
+      ],
+      "universe_filters": "Target indices and impacted constituents",
+      "directionality": "Long adds, short deletes; sector neutral",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Process-driven with public calendars."
+      },
+      "keywords": [
+        "index-rebal",
+        "flows",
+        "event-driven",
+        "ETF"
+      ],
+      "expected_horizon_notes": "Backtest 2014–2025",
+      "citations": [
+        "https://www.reddit.com/r/quantfinance/comments/1ly08hm/can_you_frontrun_institutional_rebalancing_yes_it/",
+        "https://www.reddit.com/r/algotrading/comments/s1hcp2/etf_holdings_project/"
+      ]
+    },
+    {
+      "title": "L1/L2 Order-Book Imbalance Reversion",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Fade microprice deviations when book imbalance and cancel/add ratios indicate short-lived pressure.",
+      "feature_transformations": [
+        "Imbalance=(ΣBid−ΣAsk)/(ΣBid+ΣAsk)",
+        "Microprice vs mid deviation (spread-normalized)",
+        "Cancel/Add ratio; time-since-last-fill"
+      ],
+      "data_dependencies": [
+        "NBBO + depth",
+        "Prints"
+      ],
+      "universe_filters": "High-ADV names; tight spreads",
+      "directionality": "Reversion to mid; passive exec preferred",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Data intensive but feasible on liquid names."
+      },
+      "keywords": [
+        "order-flow",
+        "microprice",
+        "imbalance",
+        "intraday"
+      ],
+      "expected_horizon_notes": "Backtest 2022–2025",
+      "citations": [
+        "https://www.reddit.com/r/algotrading/comments/13lkikt/features_other_than_ta_indicators_that_are_useful/",
+        "https://www.reddit.com/r/algotrading/comments/80jl3n/order_flow_analysis_orderbook_imbalance_volume/"
+      ]
+    },
+    {
+      "title": "Day-of-Week (DoW) Bias Overlay",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "Equity ETFs (specify)",
+      "horizon": "1-3 Days",
+      "signal_type": "Seasonality/Calendar",
+      "core_idea": "Use weekday dummy variables as gating/weighting on existing signals, e.g., favor Friday→Monday overnights.",
+      "feature_transformations": [
+        "DoW one-hot + interaction with signal strength",
+        "Rolling stability test",
+        "Exposure haircut on unfavorable DoW"
+      ],
+      "data_dependencies": [
+        "Calendar",
+        "Daily OHLC"
+      ],
+      "universe_filters": "SPY/QQQ and mega-cap single names",
+      "directionality": "Overlay only",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Seasonality is weak; best as a modulator."
+      },
+      "keywords": [
+        "seasonality",
+        "weekday",
+        "overlay",
+        "filter"
+      ],
+      "expected_horizon_notes": "Backtest 1993–2025; 6-week live overlay",
+      "citations": [
+        "https://www.reddit.com/r/algotrading/comments/1ml7caa/does_anyone_use_a_dayofweek_filter/",
+        "https://www.reddit.com/r/algotrading/comments/18k28e0/how_much_merit_do_you_give_day_of_week/"
+      ]
+    },
+    {
+      "title": "ML Target Respec: Open→Open to Avoid EOD Leakage",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "1-3 Days",
+      "signal_type": "Cross-Sectional Composite",
+      "core_idea": "Predict open→open returns with features available by ~15:50 ET, routing entries via MOC to avoid volume-finalization leakage.",
+      "feature_transformations": [
+        "Target r^{OO} instead of close→close",
+        "Leakage-safe features & timestamps",
+        "Sector-standardization and rank"
+      ],
+      "data_dependencies": [
+        "Daily OHLCV with timestamps"
+      ],
+      "universe_filters": "Top 1000 by ADV",
+      "directionality": "Rank long/short; sector/beta neutral",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Practical engineering fix improving live fidelity."
+      },
+      "keywords": [
+        "ML",
+        "leakage",
+        "OO-return",
+        "MOC/MOO"
+      ],
+      "expected_horizon_notes": "Backtest 2015–2025; 6-week shadow",
+      "citations": [
+        "https://www.reddit.com/r/algotrading/comments/1ejy68l/ml_target_and_strategy_closetoclose_vs/"
+      ]
+    },
+    {
+      "title": "Breadth-Thrust Overlay (Zweig-Style)",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "Equity ETFs (specify)",
+      "horizon": "1-4 Weeks",
+      "signal_type": "Cross-Sectional Composite",
+      "core_idea": "Deploy a breadth-thrust signal to gate exposure in momentum/reversion ETF strategies.",
+      "feature_transformations": [
+        "Adv/Dec thrust over 10 days",
+        "% constituents > SMA(50)",
+        "Exposure step-up/decay logic"
+      ],
+      "data_dependencies": [
+        "Breadth data",
+        "ETF OHLC"
+      ],
+      "universe_filters": "SPY/IWM; sector ETFs",
+      "directionality": "Overlay only",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Useful for regime timing; data source needed."
+      },
+      "keywords": [
+        "breadth",
+        "regime",
+        "overlay",
+        "ETF"
+      ],
+      "expected_horizon_notes": "Backtest 2005–2025; 8-week live overlay",
+      "citations": [
+        "https://www.reddit.com/r/algotrading/comments/13lkikt/features_other_than_ta_indicators_that_are_useful/"
+      ]
+    }
+  ],
+  "_report_path": "content/reports/20251024-reddit-quant-alphas-gpt-5-pro.md"
+}

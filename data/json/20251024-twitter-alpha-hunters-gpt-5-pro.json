@@ -1,0 +1,429 @@
+{
+  "meta": {
+    "source_searched": "Twitter/X (https://x.com)",
+    "query": "equity alpha signal feature engineering backtest order flow -crypto",
+    "scan_window": "2017-01-01 - 2025-10-24",
+    "exclusions": [
+      "Crypto and digital assets"
+    ],
+    "report_date": "2025-10-24"
+  },
+  "ideas": [
+    {
+      "title": "SPY Opening-Range / Intraday Momentum from AAD(OPEN) Breakout",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Equity ETFs (SPY)",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Momentum",
+      "core_idea": "Adaptive intraday breakout on SPY using trailing AAD(OPEN) to set expansion thresholds; optionally condition on pre-open gap context to avoid fades. Captures early-session persistence and liquidity herding.",
+      "feature_transformations": [
+        "AAD(OPEN,14) trigger: |price−open| > k·AAD",
+        "5–15m Opening Range Breakout with volume confirmation vs 20-day baseline",
+        "Gap-reversion veto when pre-open gap z-score < -1 reverts within 30m"
+      ],
+      "data_dependencies": [
+        "1-min/5-min OHLCV",
+        "pre-market prints/indications"
+      ],
+      "universe_filters": "SPY only; regular hours; skip macro minutes",
+      "directionality": "Long/short breakouts; flat by close; ATR/AAD stops",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Paper + code + replications; liquid and simple to execute."
+      },
+      "keywords": [
+        "intraday",
+        "opening-range",
+        "momentum",
+        "SPY",
+        "adaptive-threshold",
+        "gap"
+      ],
+      "expected_horizon_notes": "Backtest 2018–2025 1-min; walk-forward by year; 6 weeks live shadow",
+      "citations": [
+        "https://x.com/ConcretumR/status/1799083286175641781",
+        "https://www.alexandria.unisg.ch/bitstreams/a99aba00-f967-49b3-aceb-f544dc386e0b/download",
+        "https://concretumgroup.com/python-backtesting-beat-the-market-an-effective-intraday-momentum-strategy-for-the-sp500-etf-spy/",
+        "https://concretumgroup.com/backtesting-7-years-of-free-data-beat-the-market-an-effective-intraday-momentum-strategy-for-the-sp500-etf-spy/",
+        "https://www.quantconnect.com/forum/discussion/17091/beat-the-market-an-effective-intraday-momentum-strategy-for-s-amp-p500-etf-spy/"
+      ]
+    },
+    {
+      "title": "Night-vs-Day Drift—Long Overnight / Manage Intraday",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Equity ETFs (SPY; extend QQQ/IWM)",
+      "horizon": "Overnight",
+      "signal_type": "Seasonality/Calendar",
+      "core_idea": "Hold index ETFs only from close to next open; avoid intraday exposure. Overnight drift aligns with liquidity provision dynamics and European hours; enhance with cross-sectional features to select stocks with persistent positive overnight profiles.",
+      "feature_transformations": [
+        "Overnight return z-score vs 60-day ATR",
+        "Intraday volume-shape feature (U vs L) as enhancer",
+        "Calendar regime dummies (pre-FOMC, earnings weeks)"
+      ],
+      "data_dependencies": [
+        "Daily OHLCV",
+        "Intraday volume curves"
+      ],
+      "universe_filters": "SPY/QQQ/IWM; S&P 500 constituents ADV > $10M for cross-section",
+      "directionality": "Long overnight; optional intraday beta-hedge; gap-based risk cuts",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Strong descriptive studies; implementable with standard data; hedge design matters."
+      },
+      "keywords": [
+        "overnight",
+        "seasonality",
+        "ETF",
+        "volume-shape"
+      ],
+      "expected_horizon_notes": "Backtest 1993–2025 daily + 2–5y intraday for shape; 8 weeks live",
+      "citations": [
+        "https://x.com/ftr_investors/status/1905922267843871124",
+        "https://x.com/SJosephBurns/status/1061620773939494912",
+        "https://www.newyorkfed.org/medialibrary/media/research/staff_reports/sr917.pdf",
+        "https://www.joim.com/wp-content/uploads/emember/downloads/P0753.pdf",
+        "https://www.advisorperspectives.com/articles/2022/06/24/night-moves-is-the-overnight-drift-the-grandmother-of-all-market-anomalies"
+      ]
+    },
+    {
+      "title": "PEAD with Standardized Surprise & Volume Confirmation",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Mid-Cap",
+      "horizon": "1-4 Weeks",
+      "signal_type": "Event-Driven",
+      "core_idea": "Long high SUE winners with abnormal post-print volume; short negative surprises. Drift persists due to under-reaction and attention limits.",
+      "feature_transformations": [
+        "SUE normalized by historical analyst error volatility (8q)",
+        "Abnormal volume > 2× 60-day median as confirmation",
+        "Industry-neutral rank; exclude same-day guidance confounders"
+      ],
+      "data_dependencies": [
+        "I/B/E/S or equivalent",
+        "OHLCV"
+      ],
+      "universe_filters": "US stocks price > $3; ADV > $2M; exclude ADRs",
+      "directionality": "Cross-sectional long-short; 10–20 trading day holds",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Deep literature + repeated practitioner guidance; clear data needs."
+      },
+      "keywords": [
+        "earnings",
+        "drift",
+        "event",
+        "SUE",
+        "cross-sectional"
+      ],
+      "expected_horizon_notes": "Backtest 2005–2025; 2 seasons live",
+      "citations": [
+        "https://x.com/sai_shankarg/status/1980630043165683977",
+        "https://x.com/NSuresh_ECW/status/1944885606338978066",
+        "https://x.com/eWhispers/status/1970476319424049531"
+      ]
+    },
+    {
+      "title": "FOMC Day Effect—Buy Day-Before, Exit Announcement Close",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Equity ETFs (SPY)",
+      "horizon": "1-3 Days",
+      "signal_type": "Seasonality/Calendar",
+      "core_idea": "Systematically own SPY into scheduled FOMC decisions and exit same day after the statement. Reduced uncertainty and accommodative bias support short-window returns.",
+      "feature_transformations": [
+        "Calendar join to FOMC dates",
+        "Trend filter (SMA(100) > 0)",
+        "Sector tilt overlay in high-probability pause/cut regimes"
+      ],
+      "data_dependencies": [
+        "Daily OHLCV",
+        "FOMC calendar"
+      ],
+      "universe_filters": "SPY + liquid sectors",
+      "directionality": "Long-only; event-limited exposure",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Simple, low-trade-frequency seasonality with public calendars."
+      },
+      "keywords": [
+        "FOMC",
+        "event",
+        "seasonality",
+        "ETF"
+      ],
+      "expected_horizon_notes": "Backtest 1993–2025 event-study; 6 months live",
+      "citations": [
+        "https://x.com/QuantInsti/status/1937465741361520893",
+        "https://quantra.quantinsti.com/glossary/Is-There-an-Opportunity-to-Trade-Around-FED-Meetings",
+        "https://quantra.quantinsti.com/glossary/Fed-day-effect"
+      ]
+    },
+    {
+      "title": "Turn-of-the-Month (ToM) Effect for SPY and Sector ETFs",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Equity ETFs (SPY + Sectors)",
+      "horizon": "1-5 Days",
+      "signal_type": "Seasonality/Calendar",
+      "core_idea": "Allocate into month-end and early next month sessions where equity returns cluster. Use trend and vol targeting for robustness.",
+      "feature_transformations": [
+        "ToM dummy D-1…D+3",
+        "Vol targeting by 20d realized vol",
+        "Sector momentum overlay (63d)"
+      ],
+      "data_dependencies": [
+        "Daily OHLCV",
+        "Trading calendar"
+      ],
+      "universe_filters": "SPY + sectors; liquid ETFs only",
+      "directionality": "Long-only; exit after D+3",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Well-documented; ETF implementation is operationally simple."
+      },
+      "keywords": [
+        "seasonality",
+        "ToM",
+        "ETF",
+        "sectors"
+      ],
+      "expected_horizon_notes": "Backtest 1993–2025; 3 ToM cycles live",
+      "citations": [
+        "https://x.com/CXOAdvisory/status/1977676698390073702",
+        "https://quantra.quantinsti.com/course/event-driven-trading-strategies",
+        "https://x.com/quantpedia/status/1980186994098544679"
+      ]
+    },
+    {
+      "title": "Post-Lunch Positive Shift Intraday Mean Reversion",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Equity ETFs (SPY/QQQ)",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Seasonality/Calendar",
+      "core_idea": "Exploit the positive post-lunch drift by buying into midday weakness and exiting into early afternoon.",
+      "feature_transformations": [
+        "Minute-bucket z-scores vs 20-session history",
+        "VWAP deviation at 13:00 ET as qualifier",
+        "Macro-event exclusion filter"
+      ],
+      "data_dependencies": [
+        "1-min OHLCV"
+      ],
+      "universe_filters": "SPY/QQQ; avoid early-close days",
+      "directionality": "Long bias; ATR-scaled stops",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Effect size modest; slippage control critical."
+      },
+      "keywords": [
+        "intraday",
+        "seasonality",
+        "mean-reversion"
+      ],
+      "expected_horizon_notes": "Backtest 2018–2025 minute bars; 4 weeks live",
+      "citations": [
+        "https://quantpedia.com/lunch-effect-in-the-u-s-stock-market-indices/"
+      ]
+    },
+    {
+      "title": "Overnight Gap Fade in First 30 Minutes",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Equity ETFs (SPY)",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Mean-Reversion",
+      "core_idea": "Fade extreme pre-open gaps that partially revert as liquidity normalizes during the first 30 minutes.",
+      "feature_transformations": [
+        "Gap% / ATR(20) threshold",
+        "Opening-range extreme as stop",
+        "VWAP magnet exit"
+      ],
+      "data_dependencies": [
+        "Pre-market prints",
+        "1-min OHLCV",
+        "VWAP"
+      ],
+      "universe_filters": "SPY; skip macro days",
+      "directionality": "Contrarian; flat by 10:00 ET",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Simple, frequent set-ups; well-documented behavior."
+      },
+      "keywords": [
+        "gap",
+        "mean-reversion",
+        "intraday",
+        "VWAP"
+      ],
+      "expected_horizon_notes": "Backtest 2018–2025 1-min; 6 weeks live",
+      "citations": [
+        "https://concretumgroup.com/backtesting-7-years-of-free-data-beat-the-market-an-effective-intraday-momentum-strategy-for-the-sp500-etf-spy/"
+      ]
+    },
+    {
+      "title": "Analyst EPS Revision Momentum (Short-Horizon)",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-Cap",
+      "horizon": "1-4 Weeks",
+      "signal_type": "Fundamental",
+      "core_idea": "Accelerating positive FY1/FY2 EPS revisions predict near-term outperformance; negative streaks underperform.",
+      "feature_transformations": [
+        "Net revisions count & magnitude in trailing 20d",
+        "Industry-neutral z-scores of Δconsensus",
+        "Combine with post-earnings drift filter"
+      ],
+      "data_dependencies": [
+        "Estimates history (I/B/E/S/Refinitiv)",
+        "OHLCV"
+      ],
+      "universe_filters": "S&P 1500; price > $5; ADV > $5M",
+      "directionality": "Cross-sectional long-short; weekly rebalance",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Broad practitioner use; clean data plumbing."
+      },
+      "keywords": [
+        "revisions",
+        "fundamentals",
+        "cross-sectional"
+      ],
+      "expected_horizon_notes": "Backtest 2010–2025; 4-week live",
+      "citations": [
+        "https://x.com/FundamentEdge/status/1700232675477618707"
+      ]
+    },
+    {
+      "title": "Insider Buying Clusters with Credibility Screen",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Small-Cap",
+      "horizon": "1-6 Months",
+      "signal_type": "Fundamental",
+      "core_idea": "Multiple-executive purchase clusters where insiders increase personal wealth exposure predict positive abnormal returns; avoid noisy single trades.",
+      "feature_transformations": [
+        "Cluster intensity: unique insiders + $volume over 30 days",
+        "Credibility proxy via insider delta/vega change",
+        "Options-flow pre-trade dampener"
+      ],
+      "data_dependencies": [
+        "SEC Forms 4/5",
+        "Insider holdings/options",
+        "OHLCV",
+        "Options volume"
+      ],
+      "universe_filters": "US listed; price > $3; ADV > $1M",
+      "directionality": "Long-only baskets; 3–6m hold; sector neutral",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Robust academic backing; requires filings pipeline."
+      },
+      "keywords": [
+        "insiders",
+        "clusters",
+        "event",
+        "fundamentals"
+      ],
+      "expected_horizon_notes": "Backtest 2005–2025; 3 months live",
+      "citations": [
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3478344",
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3077389",
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=677442"
+      ]
+    },
+    {
+      "title": "52-Week-High Proximity (PTH) Momentum",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "1-6 Months",
+      "signal_type": "Momentum",
+      "core_idea": "Nearness to 52-week high dominates traditional momentum for forecasting returns; buy near highs, sell far-from-highs.",
+      "feature_transformations": [
+        "PTH = price / 52-week high; long highest ranks",
+        "Composite with 12-1 momentum",
+        "Volatility cap via 60d sigma"
+      ],
+      "data_dependencies": [
+        "Daily OHLCV"
+      ],
+      "universe_filters": "S&P 1500; price > $5; ADV > $5M",
+      "directionality": "Cross-sectional long-short; monthly rebalance",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Extensively replicated; trivial data requirements."
+      },
+      "keywords": [
+        "momentum",
+        "52-week",
+        "cross-sectional"
+      ],
+      "expected_horizon_notes": "Backtest 1995–2025; 8 weeks live",
+      "citations": [
+        "https://www.bauer.uh.edu/tgeorge/papers/gh4-paper.pdf",
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1104491",
+        "https://x.com/alojoh/status/1979743876408647988"
+      ]
+    },
+    {
+      "title": "OPEX Week Monday Bias with Prior 5‑Day High",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "Equity ETFs (SPY)",
+      "horizon": "1-3 Days",
+      "signal_type": "Seasonality/Calendar",
+      "core_idea": "During options-expiration week, Monday after a 5-day high close tends to lean positive due to dealer gamma dynamics.",
+      "feature_transformations": [
+        "OPEX calendar flag",
+        "Prior 5-day breakout condition",
+        "VIX regime filter"
+      ],
+      "data_dependencies": [
+        "Daily OHLCV",
+        "OPEX calendar",
+        "VIX"
+      ],
+      "universe_filters": "SPY",
+      "directionality": "Long Monday; or Fri close→Mon close",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Sparse but tradable; needs robust event controls."
+      },
+      "keywords": [
+        "OPEX",
+        "seasonality",
+        "ETF"
+      ],
+      "expected_horizon_notes": "Backtest 2005–2025; 3 months live",
+      "citations": [
+        "https://x.com/robusttrader"
+      ]
+    },
+    {
+      "title": "Intraday Volume-Shape → Overnight Cross-Section",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Overnight",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Stocks with U-shaped intraday volume profiles deliver higher subsequent overnight returns than L-shaped profiles; build an overnight long-short on shape ranks.",
+      "feature_transformations": [
+        "Volume-shape index = (vol_open + vol_close) / intraday total",
+        "Interaction with prior overnight momentum",
+        "Liquidity floor (ADV, spread)"
+      ],
+      "data_dependencies": [
+        "1-min volume bars",
+        "Daily returns"
+      ],
+      "universe_filters": "S&P 500; ADV > $10M; spread < 20 bps",
+      "directionality": "Rank-long top decile, short bottom decile; beta-neutral",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "New evidence; implementable with standard intraday feeds."
+      },
+      "keywords": [
+        "overnight",
+        "microstructure",
+        "volume-shape",
+        "cross-sectional"
+      ],
+      "expected_horizon_notes": "Backtest 2008–2025; 6 weeks live",
+      "citations": [
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5004991"
+      ]
+    }
+  ],
+  "_report_path": "content/reports/20251024-twitter-alpha-hunters-gpt-5-pro.md"
+}

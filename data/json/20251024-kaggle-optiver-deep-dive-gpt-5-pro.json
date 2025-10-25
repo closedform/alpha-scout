@@ -1,0 +1,674 @@
+{
+  "meta": {
+    "source_searched": "Kaggle Optiver competitions (Optiver Realized Volatility Prediction; Optiver – Trading at the Close), plus linked GitHub/Medium/X writeups",
+    "query": "Optiver competition equities order book alpha feature engineering",
+    "scan_window": "2015-01-01 - 2025-10-24",
+    "exclusions": [
+      "Crypto and digital assets"
+    ],
+    "report_date": "2025-10-24"
+  },
+  "ideas": [
+    {
+      "title": "Market Urgency (Spread × Liquidity Imbalance)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Closing-auction pressure is captured by the interaction of spread and liquidity imbalance; MarketUrgency = (ask−bid) × (bid_size−ask_size)/(bid_size+ask_size) forecasts the next-minute reference price move.",
+      "feature_transformations": [
+        "LiquidityImbalance = (bid_size − ask_size)/(bid_size + ask_size)",
+        "MarketUrgency = (ask_price − bid_price) × LiquidityImbalance",
+        "Rolling z-score of MarketUrgency over 20–60s per stock"
+      ],
+      "data_dependencies": [
+        "NOII-like auction fields: bid/ask price & size, reference price",
+        "seconds_in_bucket"
+      ],
+      "universe_filters": "US Large-Cap; price > $5; ADV > $10M; Nasdaq primary",
+      "directionality": "Rank long high MarketUrgency, short low; beta-neutral vs synthetic index; hold to cross or +30–60s",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Widely shared feature with clear mechanism; low implementation friction"
+      },
+      "keywords": [
+        "order-flow",
+        "imbalance",
+        "auction",
+        "microstructure",
+        "intraday"
+      ],
+      "expected_horizon_notes": "Backtest 2023–2025 TATC-like snapshots; live monitor 6–8 weeks.",
+      "citations": [
+        "https://github.com/liyiyan128/optiver-trading-at-the-close",
+        "https://www.kaggle.com/competitions/optiver-trading-at-the-close/discussion/462743",
+        "https://www.kaggle.com/code/tomforbes/optiver-trading-at-the-close-introduction"
+      ]
+    },
+    {
+      "title": "Mid–Microprice Divergence (microprice “pull”)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "The size-weighted mid (microprice) indicates which side is likely to be hit; Mid − Microprice predicts near-term drift in the auction reference price.",
+      "feature_transformations": [
+        "Microprice = (ask×bid_size + bid×ask_size)/(bid_size+ask_size)",
+        "Divergence = Mid − Microprice",
+        "EWM(Divergence, span=10s) and sign(ΔDivergence)"
+      ],
+      "data_dependencies": [
+        "Best bid/ask price & size",
+        "seconds_in_bucket"
+      ],
+      "universe_filters": "US Large-/Mid-Cap; exclude halted names",
+      "directionality": "Long negative Divergence (microprice above mid), short positive; sector/beta-neutral; exit at cross",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Classic LOB predictor; explicitly codified in shared repos"
+      },
+      "keywords": [
+        "microprice",
+        "imbalance",
+        "auction",
+        "intraday"
+      ],
+      "expected_horizon_notes": "Backtest 2019–2025; live A/B 4–6 weeks.",
+      "citations": [
+        "https://github.com/liyiyan128/optiver-trading-at-the-close",
+        "https://quant.stackexchange.com/questions/50651/how-to-understand-micro-price-aka-weighted-mid-price"
+      ]
+    },
+    {
+      "title": "Doublet / Triplet Imbalance Ratios",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-/Mid-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Pairwise (x−y)/(x+y) and triplet (max−mid)/(mid−min) ratios across price/size fields compress auction state into directionally informative scalars used by many top solutions.",
+      "feature_transformations": [
+        "Doublet ratios over {bid_size, ask_size, near_px, far_px, reference_px}",
+        "Triplet ratios row-wise across {near, far, reference}",
+        "Rolling mean and differences over 10–60s"
+      ],
+      "data_dependencies": [
+        "near/far/reference",
+        "sizes, counts"
+      ],
+      "universe_filters": "US Large-/Mid; ADV > $5M",
+      "directionality": "Ensemble ranks of ratios; beta/industry neutralization",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Heavily reused public feature family; easy to port"
+      },
+      "keywords": [
+        "imbalance",
+        "ratios",
+        "auction",
+        "intraday"
+      ],
+      "expected_horizon_notes": "Backtest 2023–2025; live 1 month.",
+      "citations": [
+        "https://github.com/liyiyan128/optiver-trading-at-the-close",
+        "https://www.kaggle.com/competitions/optiver-trading-at-the-close/discussion/450626"
+      ]
+    },
+    {
+      "title": "Imbalance Momentum (d/dt of Imbalance vs Matched)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Momentum",
+      "core_idea": "First/second differences of auction imbalance scaled by matched size indicate accelerating order arrival and predict next 30–60s changes in reference price.",
+      "feature_transformations": [
+        "ImbMomentum = Δ(imbalance)/max(matched_size, ε)",
+        "ImbAccel = Δ²(imbalance)/matched_size",
+        "EWM(ImbMomentum, span=15s)"
+      ],
+      "data_dependencies": [
+        "imbalance",
+        "matched_size",
+        "reference price"
+      ],
+      "universe_filters": "US Large-/Mid-Cap; exclude thin auction names",
+      "directionality": "Trade with sign of ImbMomentum; truncate on spread spikes",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Repeatedly cited by participants; mechanism clear"
+      },
+      "keywords": [
+        "imbalance",
+        "momentum",
+        "auction"
+      ],
+      "expected_horizon_notes": "Backtest 2023–2024; live 6 weeks.",
+      "citations": [
+        "https://www.kaggle.com/competitions/optiver-trading-at-the-close/discussion/485967",
+        "https://www.kaggle.com/competitions/optiver-trading-at-the-close/discussion/486666"
+      ]
+    },
+    {
+      "title": "Depth Pressure using Near/Far Differentials",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-/Mid-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Combine side depth and far−near gap to estimate cross-direction pressure; positive depth with far>near skew implies upward pressure into the cross.",
+      "feature_transformations": [
+        "DepthDiff = bid_size − ask_size",
+        "NearFarSkew = far − near",
+        "DepthPressure = DepthDiff × NearFarSkew; z-score by stock"
+      ],
+      "data_dependencies": [
+        "near_price",
+        "far_price",
+        "bid/ask sizes"
+      ],
+      "universe_filters": "US Large-/Mid; price > $5",
+      "directionality": "Rank by DepthPressure; stop if spread widens >2× median",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Intuitive combination; requires tuning by venue"
+      },
+      "keywords": [
+        "near-far",
+        "depth",
+        "auction"
+      ],
+      "expected_horizon_notes": "Backtest 2023–2025; live 1 month.",
+      "citations": [
+        "https://www.kaggle.com/competitions/optiver-trading-at-the-close/discussion/485967",
+        "https://www.kaggle.com/competitions/optiver-trading-at-the-close/discussion/462743"
+      ]
+    },
+    {
+      "title": "Matched vs. Unmatched Flow Ratio",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "PairingRate = paired/(paired+|imb|) tracks closeness to clearing; rising PairingRate aligned with imbalance sign predicts direction of next reference-price step.",
+      "feature_transformations": [
+        "PairingRate level and Δ",
+        "ΔPairingRate × sign(imbalance)",
+        "Time-weighted average over last 10–30s"
+      ],
+      "data_dependencies": [
+        "paired_shares",
+        "imbalance_shares",
+        "near/far/reference"
+      ],
+      "universe_filters": "US Large-Cap; ADV > $15M",
+      "directionality": "Trade in sign of imbalance when PairingRate accelerates",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Directly from NOII-like fields; simple"
+      },
+      "keywords": [
+        "auction",
+        "paired",
+        "imbalance"
+      ],
+      "expected_horizon_notes": "Backtest 2y; live 4 weeks.",
+      "citations": [
+        "https://www.kaggle.com/competitions/optiver-trading-at-the-close/data",
+        "https://www.kaggle.com/code/tomforbes/optiver-trading-at-the-close-introduction"
+      ]
+    },
+    {
+      "title": "Reference-Price Slope vs. Imbalance Divergence",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-/Mid-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Momentum",
+      "core_idea": "Sign disagreement between Δreference and Δimbalance flags likely re-alignment within ~60s; use as a filter or standalone signal.",
+      "feature_transformations": [
+        "RefSlope = Δ(reference)",
+        "ImbSlope = Δ(imbalance)/depth",
+        "DivergenceSignal = −sign(RefSlope × ImbSlope)"
+      ],
+      "data_dependencies": [
+        "reference",
+        "imbalance",
+        "sizes"
+      ],
+      "universe_filters": "US Large-/Mid-Cap",
+      "directionality": "Enter with DivergenceSignal; exit on sign agreement or cross",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Intuitive but sensitive to noise"
+      },
+      "keywords": [
+        "auction",
+        "divergence",
+        "momentum"
+      ],
+      "expected_horizon_notes": "Backtest 2023–2025; paper trade 1 month.",
+      "citations": [
+        "https://medium.com/@joehbridges/gauging-the-market-optivers-trading-at-the-close-kaggle-competition-27b73f7789c0",
+        "https://www.kaggle.com/competitions/optiver-trading-at-the-close/data"
+      ]
+    },
+    {
+      "title": "Synthetic Index Residual (β-neutral auction drift)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Equity ETFs (QQQ)",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Cross-Sectional Composite",
+      "core_idea": "Reconstruct synthetic index weights; form ResidRef and ResidImb vs index to forecast relative moves into the cross (pairs vs QQQ).",
+      "feature_transformations": [
+        "β_i via intraday regression vs synthetic index",
+        "ResidRef = ΔRef_i − β_i ΔRef_index",
+        "ResidImb = Imb_i − β_i Imb_index"
+      ],
+      "data_dependencies": [
+        "reference, imbalance",
+        "index proxy / synthetic index"
+      ],
+      "universe_filters": "Nasdaq-100 constituents; QQQ",
+      "directionality": "Long residual winners with positive ResidImb; short residual losers; market-neutral",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Well-documented repo approach; straightforward baskets"
+      },
+      "keywords": [
+        "index",
+        "residual",
+        "pairs",
+        "auction"
+      ],
+      "expected_horizon_notes": "Backtest 2023–2025; live 6 weeks.",
+      "citations": [
+        "https://github.com/liyiyan128/optiver-trading-at-the-close",
+        "https://www.kaggle.com/competitions/optiver-trading-at-the-close/discussion/485967"
+      ]
+    },
+    {
+      "title": "Sector-Time Grouped Context Features",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-/Mid-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Cross-Sectional Composite",
+      "core_idea": "Normalize stock-level auction features by concurrent sector statistics to reduce idiosyncratic noise and improve cross-sectional rank stability.",
+      "feature_transformations": [
+        "SectorImbZ",
+        "SectorRelRef",
+        "Ratios to sector medians"
+      ],
+      "data_dependencies": [
+        "auction features",
+        "sector mapping"
+      ],
+      "universe_filters": "US Large-/Mid-Cap; GICS sectoring",
+      "directionality": "Rank by sector-relative metrics; sector-neutral portfolio",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Cited by participants; low complexity"
+      },
+      "keywords": [
+        "sector",
+        "normalization",
+        "auction"
+      ],
+      "expected_horizon_notes": "Backtest 2y; live 1 month.",
+      "citations": [
+        "https://www.kaggle.com/competitions/optiver-trading-at-the-close/discussion/487276"
+      ]
+    },
+    {
+      "title": "Time-to-Cross Urgency (seconds remaining)",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Weight pressure features by a convex function of time remaining to emphasize higher-signal late updates from NOII.",
+      "feature_transformations": [
+        "UrgencyWeight = 1/√(seconds_to_close+1)",
+        "WeightedImb = Imbalance × UrgencyWeight",
+        "LateSurge = ΔImbalance last 20s × UrgencyWeight"
+      ],
+      "data_dependencies": [
+        "imbalance, seconds_in_bucket (time remaining)"
+      ],
+      "universe_filters": "US Large-/Mid-Cap",
+      "directionality": "Use weighted ranks; cap exposure in last 5s",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Aligned with NOII mechanics; easy to add"
+      },
+      "keywords": [
+        "NOII",
+        "timing",
+        "auction"
+      ],
+      "expected_horizon_notes": "Backtest 2023–2025; live 4 weeks.",
+      "citations": [
+        "https://www.investopedia.com/terms/n/net-order-imbalance-indicator-noii.asp",
+        "https://optiver.com/kaggle-and-optiver-predicting-nasdaqs-closing-cross-auction-movements/"
+      ]
+    },
+    {
+      "title": "Spread–Depth Ratio",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-/Mid-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Mean-Reversion",
+      "core_idea": "Normalize spread by top-of-book depth; extreme SDR tends to revert pre-cross as liquidity replenishes.",
+      "feature_transformations": [
+        "SDR = (ask − bid)/(bid_size + ask_size)",
+        "SDR z-score and ΔSDR",
+        "SDR × sign(imbalance)"
+      ],
+      "data_dependencies": [
+        "spread",
+        "sizes"
+      ],
+      "universe_filters": "US Large-/Mid-Cap",
+      "directionality": "Fade extreme SDR; exit on normalization",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Feature mentioned in posts; mixed empirical results"
+      },
+      "keywords": [
+        "spread",
+        "depth",
+        "mean-revert"
+      ],
+      "expected_horizon_notes": "Backtest 2y; live 1 month.",
+      "citations": [
+        "https://www.kaggle.com/competitions/optiver-trading-at-the-close/discussion/485967"
+      ]
+    },
+    {
+      "title": "Far–Near Asymmetry Trigger",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Event-Driven",
+      "core_idea": "Widening far−near reflects uncertainty about clearing price; sharp changes predict next update direction when combined with imbalance sign.",
+      "feature_transformations": [
+        "FNDelta = far − near",
+        "ΔFNDelta and sign(ΔFNDelta) × sign(imb)",
+        "Volatility-adjusted FNDelta"
+      ],
+      "data_dependencies": [
+        "near, far, imbalance, reference"
+      ],
+      "universe_filters": "US Large-Cap",
+      "directionality": "Follow sign of ΔFNDelta; risk cap on spread blowout",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Direct from auction fields; low compute"
+      },
+      "keywords": [
+        "near",
+        "far",
+        "auction",
+        "event"
+      ],
+      "expected_horizon_notes": "Backtest 2y; live 4 weeks.",
+      "citations": [
+        "https://www.kaggle.com/code/tomforbes/optiver-trading-at-the-close-introduction"
+      ]
+    },
+    {
+      "title": "Matched-Size Slope (Fill Momentum)",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-/Mid-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Momentum",
+      "core_idea": "Rising paired_shares per second indicates increasing certainty of clearing price; tends to align with subsequent reference-price moves.",
+      "feature_transformations": [
+        "FillSlope = Δ(paired_shares)/Δt",
+        "FillAccel = Δ²(paired_shares)",
+        "FillSlope × sign(imbalance)"
+      ],
+      "data_dependencies": [
+        "paired_shares",
+        "imbalance"
+      ],
+      "universe_filters": "US Large-/Mid-Cap",
+      "directionality": "Trade with FillSlope × sign(imbalance); exit at cross",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Needs stable paired_shares estimates"
+      },
+      "keywords": [
+        "paired",
+        "slope",
+        "auction"
+      ],
+      "expected_horizon_notes": "Backtest 2y; live 1 month.",
+      "citations": [
+        "https://medium.com/@joehbridges/gauging-the-market-optivers-trading-at-the-close-kaggle-competition-27b73f7789c0"
+      ]
+    },
+    {
+      "title": "Cross-Day z-Score of Market Urgency",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-/Mid-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Cross-Sectional Composite",
+      "core_idea": "Normalize today’s urgency by historical distribution to reduce regime drift; extreme positive z-scores predict stronger directional closes.",
+      "feature_transformations": [
+        "ZUrgency_t = (Urgency_t − μ_pastN)/σ_pastN",
+        "Bucket by minutes-to-close"
+      ],
+      "data_dependencies": [
+        "auction features",
+        "history"
+      ],
+      "universe_filters": "US Large-/Mid-Cap; 60+ prior sessions",
+      "directionality": "Rank by ZUrgency; industry/beta-neutral",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Common normalization; robust in practice"
+      },
+      "keywords": [
+        "z-score",
+        "normalization",
+        "auction"
+      ],
+      "expected_horizon_notes": "Backtest 6–12 months; live 4 weeks.",
+      "citations": [
+        "https://www.kaggle.com/competitions/optiver-trading-at-the-close/discussion/462664"
+      ]
+    },
+    {
+      "title": "Auction Price Convergence Rate",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Momentum",
+      "core_idea": "Faster convergence of reference to near/far predicts continuation on the next update; use convergence velocity as the signal.",
+      "feature_transformations": [
+        "DistToNear = |reference − near|; DistToFar = |reference − far|",
+        "Convergence = −Δ(DistToNearest)/Δt",
+        "EWM(Convergence) × sign(imbalance)"
+      ],
+      "data_dependencies": [
+        "near",
+        "far",
+        "reference",
+        "imbalance"
+      ],
+      "universe_filters": "US Large-Cap",
+      "directionality": "Trade with sign of Convergence; cut on widening distance",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Directly tied to auction mechanics"
+      },
+      "keywords": [
+        "convergence",
+        "auction",
+        "momentum"
+      ],
+      "expected_horizon_notes": "Backtest 2y; live 1 month.",
+      "citations": [
+        "https://www.kaggle.com/code/tomforbes/optiver-trading-at-the-close-introduction"
+      ]
+    },
+    {
+      "title": "Weighted WAP / Index Ratio & Difference",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Equity ETFs (QQQ)",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Cross-Sectional Composite",
+      "core_idea": "Use Weighted WAP vs index (ratio/difference) to detect residual dislocations into the close and trade pairs vs QQQ.",
+      "feature_transformations": [
+        "WAPRatio = WAP_i/WAP_index; WAPDiff = WAP_i − β_i·WAP_index",
+        "Rolling z-scores; interact with imbalance"
+      ],
+      "data_dependencies": [
+        "WAP/reference",
+        "index proxy / synthetic"
+      ],
+      "universe_filters": "Nasdaq 100 constituents; QQQ",
+      "directionality": "Residual long/short; market-neutral",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Simple residual framework; cited by participants"
+      },
+      "keywords": [
+        "WAP",
+        "index",
+        "residual"
+      ],
+      "expected_horizon_notes": "Backtest 2y; live 1 month.",
+      "citations": [
+        "https://www.kaggle.com/competitions/optiver-trading-at-the-close/discussion/485967",
+        "https://github.com/liyiyan128/optiver-trading-at-the-close"
+      ]
+    },
+    {
+      "title": "OFI (Order Flow Imbalance) at BBO",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-/Mid-Cap",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "OFI from changes in best bid/ask prices and sizes aggregated to 10–60s bars predicts short-horizon returns in continuous trading and around the close.",
+      "feature_transformations": [
+        "OFI_t from ΔBid/Ask size/price events",
+        "Bar-aggregated OFI, EWM(OFI), OFI/Depth"
+      ],
+      "data_dependencies": [
+        "NBBO L1 book updates",
+        "trade prints"
+      ],
+      "universe_filters": "US Large-/Mid-Cap; high-ADV",
+      "directionality": "Trade with OFI sign; beta-neutral; slippage haircuts",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Canonical signal; widely reproduced"
+      },
+      "keywords": [
+        "OFI",
+        "microstructure",
+        "intraday"
+      ],
+      "expected_horizon_notes": "Backtest 2018–2025; live 6 weeks.",
+      "citations": [
+        "https://dm13450.github.io/2022/02/02/Order-Flow-Imbalance.html",
+        "https://www.kaggle.com/code/gunesevitan/optiver-realized-volatility-prediction-eda"
+      ]
+    },
+    {
+      "title": "Microprice Trend (Regular Session)",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-/Mid-Cap",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Momentum",
+      "core_idea": "ΔMicroprice tends to lead ΔMid; short-horizon returns align with the microprice slope, especially in tight-spread names.",
+      "feature_transformations": [
+        "Microprice; Δ and EWM slope",
+        "Microprice−Mid divergence decay rate"
+      ],
+      "data_dependencies": [
+        "NBBO L1 price & size"
+      ],
+      "universe_filters": "US Large-/Mid-Cap; spread ≤ 2 ticks",
+      "directionality": "Trade with Microprice slope; fade on quick snap",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Established heuristic; liquidity dependent"
+      },
+      "keywords": [
+        "microprice",
+        "momentum",
+        "intraday"
+      ],
+      "expected_horizon_notes": "Backtest 2018–2025; live 6 weeks.",
+      "citations": [
+        "https://quant.stackexchange.com/questions/50651/how-to-understand-micro-price-aka-weighted-mid-price",
+        "https://www.kaggle.com/code/gunesevitan/optiver-realized-volatility-prediction-eda"
+      ]
+    },
+    {
+      "title": "Volatility Ratio (Target / RealizedVol of log_return1)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Global Developed",
+      "horizon": "1-5 Days",
+      "signal_type": "Mean-Reversion",
+      "core_idea": "vol_ratio = next-interval vol proxy / realized_vol(log_return1); extremes flag over/under-shooting volatility that mean-reverts in subsequent intervals/days.",
+      "feature_transformations": [
+        "Realized vol of WAP returns (ORVP method)",
+        "vol_ratio and z-score by stock/day"
+      ],
+      "data_dependencies": [
+        "WAP 10s bars",
+        "book/trade"
+      ],
+      "universe_filters": "Developed-market equities; ADV > $5M",
+      "directionality": "Short vol_ratio tails; long small tails; risk via position sizing",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Directly from public solution; portable"
+      },
+      "keywords": [
+        "realized vol",
+        "mean-revert",
+        "intraday"
+      ],
+      "expected_horizon_notes": "Backtest 2018–2024; monitor 8 weeks.",
+      "citations": [
+        "https://www.kaggle.com/competitions/optiver-realized-volatility-prediction/discussion/275973",
+        "https://www.kaggle.com/competitions/optiver-realized-volatility-prediction"
+      ]
+    },
+    {
+      "title": "All-Levels WAP & Liquidity Curvature",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Global Developed",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Depth-weighted WAP across multiple levels and curvature (slope changes of price vs cumulative depth) interact with dislocation to forecast reversal/continuation.",
+      "feature_transformations": [
+        "WAP_k across depth; WAP_1−WAP_k",
+        "Curvature = Δ(Price_vs_Depth slope)",
+        "Dislocation = last_trade − WAP_1; interact with curvature"
+      ],
+      "data_dependencies": [
+        "LOB L1–L10",
+        "trades"
+      ],
+      "universe_filters": "US Large-/Mid-Cap; high-ADV",
+      "directionality": "Fade dislocations when curvature signals replenishment; follow when curvature steepens",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Documented in public writeups; easy to port with L2"
+      },
+      "keywords": [
+        "WAP",
+        "depth",
+        "curvature",
+        "dislocation"
+      ],
+      "expected_horizon_notes": "Backtest 2018–2025; live 6 weeks.",
+      "citations": [
+        "https://www.kaggle.com/competitions/optiver-realized-volatility-prediction/writeups/jacoby-jaeger-15th-place-interesting-features-no-p",
+        "https://www.kaggle.com/competitions/optiver-realized-volatility-prediction/writeups/fritz-cremer-public-37th-solution"
+      ]
+    }
+  ],
+  "_report_path": "content/reports/20251024-kaggle-optiver-deep-dive-gpt-5-pro.md"
+}

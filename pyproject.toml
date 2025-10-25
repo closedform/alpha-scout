@@ -10,6 +10,7 @@ dependencies = []
 generate-prompt = "alpha_scout.tools.generate_prompt:main"
 append-index = "alpha_scout.tools.json_index:main"
 collect-json = "alpha_scout.tools.collect_reports:main"
+report-fix-prompt = "alpha_scout.tools.report_fix_prompt:main"
 
 [build-system]
 requires = ["setuptools>=68"]

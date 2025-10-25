@@ -1,0 +1,693 @@
+{
+  "meta": {
+    "source_searched": "Twitter/X (selected threads via Thread Reader) + supporting public docs",
+    "query": "equity alpha",
+    "scan_window": "2017-01-01 - 2025-12-31",
+    "exclusions": [
+      "Crypto and digital assets"
+    ],
+    "report_date": "2025-10-24"
+  },
+  "ideas": [
+    {
+      "title": "3:50 “Significant Imbalance” → drift into the NYSE close",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "NYSE publishes a Significant Imbalance flag at 3:50:00 PM. A positive (buy) flag and large normalized imbalance tend to coincide with into-close drift and larger auction slippage; trade the direction, scaled by normalized imbalance and internalization.",
+      "feature_transformations": [
+        "SignificantImbFlag_350 ∈ {0,1}",
+        "ImbZ = ImbalanceShares / avg20dAuctionVol",
+        "Slippage2m = CloseAuctionPrice − VWAP[3:58–4:00]",
+        "Drift = Price[4:00] − Price[3:50]",
+        "Interaction: ImbZ × HighInternalization"
+      ],
+      "data_dependencies": [
+        "NYSE Closing Imbalance feed or BMLL auction imbalance",
+        "NBBO/TAQ",
+        "TRF share near close"
+      ],
+      "universe_filters": "US Large‑Cap; price > $5; ADV > $10M; primary NYSE; exclude halts",
+      "directionality": "Follow sign of flag; beta/sector neutral; exit at auction",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Exchange-documented flag; clear timestamps; highly liquid."
+      },
+      "keywords": [
+        "order-flow",
+        "MOC",
+        "auction",
+        "imbalance",
+        "slippage",
+        "intraday"
+      ],
+      "expected_horizon_notes": "Backtest 2023–2025 intraday; live monitor 6–8 weeks.",
+      "citations": [
+        "https://www.nyse.com/data-insights/the-nyse-significant-imbalance-enhanced-trading-opportunities-at-the-nyse-closing-auction",
+        "https://www.bmlltech.com/news/market-insight/into-the-close-unpacking-u-s-closing-auction-dynamics-and-the-impact-of-the-russell-reconstitution"
+      ]
+    },
+    {
+      "title": "Imbalance acceleration 3:50→3:55 (D‑quotes) predicts last‑minute move",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Imbalance updates accelerate post‑3:50 as D‑Orders interact; the slope/acceleration of imbalance between 3:50 and ~3:55 predicts final minutes’ price path.",
+      "feature_transformations": [
+        "dImb/dt over [3:50, 3:55] and [3:55, 3:59:50]",
+        "Accel = (dImb/dt)_late − (dImb/dt)_early",
+        "ImbConv normalized by avg20dAuctionVol",
+        "ΔMid = Mid[4:00] − Mid[3:50]"
+      ],
+      "data_dependencies": [
+        "Closing imbalance feed",
+        "NBBO mid",
+        "Trades"
+      ],
+      "universe_filters": "NYSE‑listed >$5; ADV > $5M; exclude earnings days",
+      "directionality": "Trade sign(Accel); exit on auction",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Mechanism and timing well-documented; requires feed access."
+      },
+      "keywords": [
+        "order-flow",
+        "D-quotes",
+        "acceleration",
+        "closing",
+        "imbalance"
+      ],
+      "expected_horizon_notes": "Backtest 2019–2025; forward 1–2 rebalance cycles.",
+      "citations": [
+        "https://databento.com/blog/how-nyse-closing-imbalance-feed-moves-markets",
+        "https://www.nyse.com/auctions"
+      ]
+    },
+    {
+      "title": "Highly internalized names → larger into‑close drift and slippage",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Mid-Cap",
+      "horizon": "Intraday (1-6h), Overnight",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Stocks with high TRF share near the close show more drift and auction slippage; tilt closing trades by internalization and optionally fade the slippage overnight.",
+      "feature_transformations": [
+        "TRF15 = TRFVol[3:45–4:00]/(AuctionVol + TRFVol[3:45–4:00])",
+        "Sign(Imbalance) × TRF15",
+        "Slip2m vs 2‑minute VWAP"
+      ],
+      "data_dependencies": [
+        "Imbalance feed",
+        "TRF prints",
+        "Auction print",
+        "NBBO"
+      ],
+      "universe_filters": "S&P1500; exclude ADRs",
+      "directionality": "Scale closing direction by TRF15 decile; optional overnight fade of extremes",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Exchange study; transparent computation; liquid names."
+      },
+      "keywords": [
+        "internalization",
+        "MOC",
+        "imbalance",
+        "slippage",
+        "TRF"
+      ],
+      "expected_horizon_notes": "Backtest 2022–2025.",
+      "citations": [
+        "https://www.nyse.com/data-insights/closing-auction-internalization-effect-throughout-imbalance-period"
+      ]
+    },
+    {
+      "title": "Opening auction imbalance sign predicts first 5–15 minutes",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Opening imbalance (8:30–9:35 cadence) indicates immediate demand/supply skew; normalized imbalance sign predicts initial post‑open direction.",
+      "feature_transformations": [
+        "OpenImbZ = Imb/avg20dOpenAuctionVol",
+        "GapAdj = (OpenPrice − pre‑market VWAP)",
+        "Spread/tick and volatility filters"
+      ],
+      "data_dependencies": [
+        "Opening imbalance feed",
+        "Auction print",
+        "Pre‑market trades"
+      ],
+      "universe_filters": "NYSE/Arca; price > $5; ADV > $5M",
+      "directionality": "Directional 5–15 min scalp; fade if large gap into imbalance",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Clear timestamps; liquid opening prints."
+      },
+      "keywords": [
+        "opening",
+        "imbalance",
+        "gap",
+        "intraday"
+      ],
+      "expected_horizon_notes": "Backtest 2018–2025.",
+      "citations": [
+        "https://www.nyse.com/auctions",
+        "https://www.nyse.com/publicdocs/nyse/data/TAQ_NYSE_Order_Imbalance_QRC.pdf",
+        "https://www.nyse.com/markets/nyse-arca/trading-info"
+      ]
+    },
+    {
+      "title": "Nasdaq NOIS snapshots → pre‑close drift predictor",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "NOIS net imbalance snapshots predict into‑close drift and final cross price; use normalized level and last‑10‑minute change.",
+      "feature_transformations": [
+        "NOIS_Z = NOIS/avg20dCloseAuctionVol",
+        "NOIS_d = NOIS[t] − NOIS[t−Δ]",
+        "DriftClose = Price[4:00] − Price[3:50]"
+      ],
+      "data_dependencies": [
+        "Nasdaq NOIS",
+        "NBBO/trades"
+      ],
+      "universe_filters": "Nasdaq‑listed >$5, ADV >$10M",
+      "directionality": "Trade sign(NOIS_Z); exit at cross",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Well‑specified feed; consistent cadence."
+      },
+      "keywords": [
+        "NOIS",
+        "imbalance",
+        "Nasdaq",
+        "closing"
+      ],
+      "expected_horizon_notes": "Backtest 2017–2025.",
+      "citations": [
+        "https://www.nasdaqtrader.com/content/technicalsupport/specifications/dataproducts/NOIS_v2.2.pdf"
+      ]
+    },
+    {
+      "title": "Index‑level MOC notional imbalance → SPY/QQQ/DIA into‑close tilt",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "Equity ETFs (SPY/QQQ/DIA)",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Event-Driven",
+      "core_idea": "Aggregated index MOC imbalances force ETF/futures hedges; trade index ETFs into the close using normalized notional imbalance.",
+      "feature_transformations": [
+        "MOC_Index = Σ(Imb_i × weight_i)",
+        "MOC_Index_Z via 60‑day z‑score",
+        "ΔIndexFutBasis risk check"
+      ],
+      "data_dependencies": [
+        "Vendor/desk broadcasts",
+        "Component imbalances",
+        "ETF trades"
+      ],
+      "universe_filters": "SPY, QQQ, DIA",
+      "directionality": "Directional tilt; exit at 4:00",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Public broadcasts common; ETFs highly liquid."
+      },
+      "keywords": [
+        "MOC",
+        "ETF",
+        "imbalance",
+        "hedging"
+      ],
+      "expected_horizon_notes": "Backtest 2020–2025.",
+      "citations": [
+        "https://twitter.com/financialjuice/status/1737554508575185293",
+        "https://tradersmastermind.com/moc-order-flow/"
+      ]
+    },
+    {
+      "title": "Auction slippage mean‑reverts overnight",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Overnight",
+      "signal_type": "Mean-Reversion",
+      "core_idea": "Extreme closing auction slippage vs late VWAP often reverts by next open; run cross‑sectional overnight reversal keyed to |Slip2m|.",
+      "feature_transformations": [
+        "Slip2m deciles",
+        "Sector/size neutralization",
+        "Exclude earnings"
+      ],
+      "data_dependencies": [
+        "Auction print",
+        "2‑min VWAP",
+        "Next open"
+      ],
+      "universe_filters": "S&P1500; price > $5",
+      "directionality": "Long negative slippage, short positive; exit at open",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Mechanism linked to well‑documented internalization effects."
+      },
+      "keywords": [
+        "auction",
+        "slippage",
+        "mean-reversion",
+        "overnight"
+      ],
+      "expected_horizon_notes": "Backtest 2018–2025.",
+      "citations": [
+        "https://www.nyse.com/data-insights/closing-auction-internalization-effect-throughout-imbalance-period"
+      ]
+    },
+    {
+      "title": "Integrated multi‑level OFI → short‑horizon price impact",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Compute multi‑level OFI and regress to short‑horizon returns, with inverse‑depth scaling and optional sector cross‑impact.",
+      "feature_transformations": [
+        "OFI_L1..Lk; OFI_Int = Σ w_l OFI_Ll",
+        "DepthInv = 1/Depth_L1",
+        "Sector cross‑impact term"
+      ],
+      "data_dependencies": [
+        "L2/L3 depth",
+        "NBBO",
+        "Trades"
+      ],
+      "universe_filters": "Top 500 by ADV",
+      "directionality": "Thresholded linear predictor; 5–10 min holds",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Extensive literature; robust transforms."
+      },
+      "keywords": [
+        "OFI",
+        "depth",
+        "microstructure",
+        "cross-impact"
+      ],
+      "expected_horizon_notes": "Backtest 2017–2025 tick/L2.",
+      "citations": [
+        "https://arxiv.org/abs/1011.6402",
+        "https://ora.ox.ac.uk/objects/uuid%3A9b7d0422-4ef1-48e7-a2d4-4eaa8a0a7ec1/files/m89dedb16194e627a2c92d14e3329bd48",
+        "https://arxiv.org/abs/2112.13213"
+      ]
+    },
+    {
+      "title": "Queue imbalance / microprice → one‑tick‑ahead predictor",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Use microprice and best‑level queue imbalance to predict the next tick direction; trade sign(ΔMicro).",
+      "feature_transformations": [
+        "I = Qb/(Qb+Qa)",
+        "Micro = I*Ask + (1−I)*Bid",
+        "ΔMicro = Micro − Mid"
+      ],
+      "data_dependencies": [
+        "L1 sizes/prices",
+        "Trades"
+      ],
+      "universe_filters": "Large‑tick mega‑caps",
+      "directionality": "Enter with sign(ΔMicro); exit on quote update",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Simple and reproducible using L1."
+      },
+      "keywords": [
+        "microprice",
+        "queue-imbalance",
+        "NBBO",
+        "one-tick"
+      ],
+      "expected_horizon_notes": "Backtest 2019–2025.",
+      "citations": [
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2970694",
+        "https://arxiv.org/pdf/1512.03492",
+        "https://twitter.com/sashastoikov/status/1271072142063525889"
+      ]
+    },
+    {
+      "title": "NBBO rotation spike → short‑term “attention” momentum",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Event-Driven",
+      "core_idea": "NBBO update bursts (rotation) cluster at information arrival; a high rotation z‑score combined with OFI predicts near‑term moves.",
+      "feature_transformations": [
+        "Rot = #NBBO_changes[Δt]; RotZ = zscore_by_timeofday(Rot)",
+        "Interaction: RotZ × sign(OFI_L1)"
+      ],
+      "data_dependencies": [
+        "NBBO",
+        "Trades"
+      ],
+      "universe_filters": "Mega‑caps, news‑sensitive names",
+      "directionality": "Trigger when RotZ>2; hold 5–30 min",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Requires careful debiasing for feed artifacts."
+      },
+      "keywords": [
+        "NBBO",
+        "rotation",
+        "attention",
+        "OFI"
+      ],
+      "expected_horizon_notes": "Backtest 2021–2025.",
+      "citations": [
+        "https://primer.prooftrading.com/assets/pdf/section_05_market-activity.pdf"
+      ]
+    },
+    {
+      "title": "Quote‑to‑trade ratio (QTR) filter → higher quality OFI signals",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Use 60s QTR to gate OFI entries; low QTR implies more informative trading activity.",
+      "feature_transformations": [
+        "QTR60 = NBBO_changes_60s / Trades_60s",
+        "Trade OFI only if QTR60 < percentile threshold"
+      ],
+      "data_dependencies": [
+        "NBBO changes",
+        "Trades"
+      ],
+      "universe_filters": "Top 100 by ADV",
+      "directionality": "As in OFI, filtered by QTR",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Simple SNR filter supported by literature context."
+      },
+      "keywords": [
+        "QTR",
+        "NBBO",
+        "OFI",
+        "filter"
+      ],
+      "expected_horizon_notes": "Backtest 2019–2025.",
+      "citations": [
+        "https://www.sciencedirect.com/science/article/pii/S0304405X25000947"
+      ]
+    },
+    {
+      "title": "Odd‑lot dominance ratio → next‑day mean‑reversion tilt",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Overnight",
+      "signal_type": "Microstructure/Mean-Reversion",
+      "core_idea": "Odd‑lot share late‑day proxies for internalized/retail conditions; extremes mean‑revert by next open.",
+      "feature_transformations": [
+        "OddShare = OddLotVol / TotalVol (late day)",
+        "Interact with Slip2m deciles"
+      ],
+      "data_dependencies": [
+        "Odd‑lot trade flags",
+        "Auction print"
+      ],
+      "universe_filters": "S&P 500/400; exclude <$5",
+      "directionality": "Cross‑sectional LR/short overlay; exit at open",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Data availability varies; concept supported by execution quality studies."
+      },
+      "keywords": [
+        "odd-lots",
+        "internalization",
+        "NBBO",
+        "reversion"
+      ],
+      "expected_horizon_notes": "Backtest 2020–2025.",
+      "citations": [
+        "https://onlinelibrary.wiley.com/doi/full/10.1111/jofi.13467"
+      ]
+    },
+    {
+      "title": "Iceberg detection via replenishment patterns → follow hidden interest",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Detect repeated partial fills with immediate depth refresh as iceberg proxies; trade with iceberg bias and microprice.",
+      "feature_transformations": [
+        "IcebergHits/min and IcebergBias",
+        "ΔMicro as directional confirmation"
+      ],
+      "data_dependencies": [
+        "L3/order messages",
+        "L2 depth",
+        "Trades"
+      ],
+      "universe_filters": "Top 200 by L2 message rate",
+      "directionality": "Trade with IcebergBias; exit on depth depletion",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Needs granular feeds; conceptually strong."
+      },
+      "keywords": [
+        "iceberg",
+        "hidden-liquidity",
+        "replenishment",
+        "microprice"
+      ],
+      "expected_horizon_notes": "Backtest 2021–2025.",
+      "citations": [
+        "https://www.exegy.com/ml-copycat-investors-alpha-clones-part-1/",
+        "https://quant.stackexchange.com/questions/64356/determine-market-and-ice-berg-order-types-from-live-trade-and-quote-data"
+      ]
+    },
+    {
+      "title": "Sector cross‑impact — leader OFI spills into peers",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Sector-Specific (specify)",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Cross-Sectional Composite",
+      "core_idea": "Leader OFI propagates to peers via cross‑impact; trade peer baskets on leader OFI with short holding windows.",
+      "feature_transformations": [
+        "LeaderOFI_Int",
+        "Peer regression vs leader OFI",
+        "Sector ETF control"
+      ],
+      "data_dependencies": [
+        "L2 depth",
+        "Trades",
+        "Sector taxonomy"
+      ],
+      "universe_filters": "Semis, mega‑cap tech, financials; liquid peers only",
+      "directionality": "Cross‑sectional long/short; hedge to ETF",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Documented cross‑impact; scalable cross‑sectionally."
+      },
+      "keywords": [
+        "cross-impact",
+        "sector",
+        "OFI"
+      ],
+      "expected_horizon_notes": "Backtest 2019–2025.",
+      "citations": [
+        "https://arxiv.org/abs/2112.13213"
+      ]
+    },
+    {
+      "title": "LULD reopen auction imbalance → first 5–15 minute follow‑through",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Mid-Cap",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Event-Driven",
+      "core_idea": "Use signed reopen imbalance and collar width to predict post‑reopen direction.",
+      "feature_transformations": [
+        "ReopenImbZ vs history",
+        "CollarW as volatility proxy"
+      ],
+      "data_dependencies": [
+        "Reopen auction feed",
+        "NBBO/trades"
+      ],
+      "universe_filters": "Mid‑caps prone to LULD",
+      "directionality": "Directional scalp; tight risk",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Published mechanisms and rule changes."
+      },
+      "keywords": [
+        "LULD",
+        "reopen",
+        "auction",
+        "imbalance"
+      ],
+      "expected_horizon_notes": "Backtest 2020–2025.",
+      "citations": [
+        "https://www.nasdaq.com/articles/all-about-lulds",
+        "https://www.sec.gov/files/rules/sro/nasdaq/2024/34-101620.pdf"
+      ]
+    },
+    {
+      "title": "Stacked footprint imbalances across levels → reversal zones",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Detect stacked (multi‑level) aggressive imbalances and fade when absorption appears.",
+      "feature_transformations": [
+        "StackLen (levels with imbalance>k)",
+        "Absorb: rising passive volume against aggression"
+      ],
+      "data_dependencies": [
+        "L2/L3 footprint",
+        "Trades"
+      ],
+      "universe_filters": "High‑ADV names; exclude news",
+      "directionality": "Fade stacks with absorption; tight stops",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Popular concept; codifiable with clear rules."
+      },
+      "keywords": [
+        "footprint",
+        "stacked-imbalance",
+        "absorption"
+      ],
+      "expected_horizon_notes": "Backtest 2022–2025.",
+      "citations": [
+        "https://www.marketcalls.in/orderflow/using-stacked-imbalances-to-identify-key-market-reversals-orderflow-tutorial.html"
+      ]
+    },
+    {
+      "title": "Long‑memory in order‑flow signs → intraday momentum overlay",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Exploit persistent sign autocorrelation from metaorder splitting to gate/enhance OFI entries.",
+      "feature_transformations": [
+        "SignImb (volume‑weighted signed trades)",
+        "Hurst‑based regime filter"
+      ],
+      "data_dependencies": [
+        "Trades with aggressor side",
+        "NBBO"
+      ],
+      "universe_filters": "Top 500 by prints/day",
+      "directionality": "Overlay on OFI; trade only in persistent regimes",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Empirical support; simple to compute."
+      },
+      "keywords": [
+        "long-memory",
+        "order-splitting",
+        "momentum"
+      ],
+      "expected_horizon_notes": "Backtest 2019–2025.",
+      "citations": [
+        "https://arxiv.org/abs/2301.13505"
+      ]
+    },
+    {
+      "title": "Fragmentation/venue‑routing context → OFI impact filter",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Compute a fragmentation index (venue Herfindahl) and down‑weight OFI in highly fragmented conditions.",
+      "feature_transformations": [
+        "FragIdx = Σ venue_share^2 (rolling)",
+        "OFI_eff = OFI × f(FragIdx)"
+      ],
+      "data_dependencies": [
+        "Venue‑tagged trades",
+        "NBBO"
+      ],
+      "universe_filters": "Top 300 by venue count",
+      "directionality": "Scale down as fragmentation rises",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Filtering concept supported by routing literature."
+      },
+      "keywords": [
+        "fragmentation",
+        "routing",
+        "NBBO",
+        "OFI"
+      ],
+      "expected_horizon_notes": "Backtest 2018–2025.",
+      "citations": [
+        "https://www.mdpi.com/1911-8074/14/11/556",
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1911491"
+      ]
+    },
+    {
+      "title": "Intermarket Sweep Order (ISO) bursts → short‑term continuation",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (<1h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Detect rapid, multi‑venue print clusters consistent with ISO sweeps and trade continuation with spread/depth checks.",
+      "feature_transformations": [
+        "SweepBurst (#prints≥N across≥M venues within ≤Δt_ms)",
+        "BurstDisplacement (ticks from mid)"
+      ],
+      "data_dependencies": [
+        "Millisecond prints with venue tags",
+        "NBBO"
+      ],
+      "universe_filters": "S&P 100",
+      "directionality": "Enter with displacement sign; quick exits",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Mechanistically grounded; requires precise tape."
+      },
+      "keywords": [
+        "ISO",
+        "sweep",
+        "venues",
+        "momentum"
+      ],
+      "expected_horizon_notes": "Backtest 2019–2025.",
+      "citations": [
+        "https://www.nasdaqtrader.com/trader.aspx?id=routing",
+        "https://www.nasdaq.com/articles/how-trades-speed-between-venues"
+      ]
+    },
+    {
+      "title": "Russell reconstitution day — closing auction tilt",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Small-Cap",
+      "horizon": "Intraday (<1h), 1-3 Days",
+      "signal_type": "Event-Driven",
+      "core_idea": "Adds/deletes show large closing imbalances and slippage; trade into‑close direction and partial next‑day reversal on extremes.",
+      "feature_transformations": [
+        "ReconstFlag (index changes)",
+        "ImbZ at 3:50, 3:59:50",
+        "Slip2m and follow‑through"
+      ],
+      "data_dependencies": [
+        "Auction imbalance",
+        "Index membership files",
+        "Auction print"
+      ],
+      "universe_filters": "Russell 2000 candidates",
+      "directionality": "Into‑close tilt; next‑day partial fade",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Well‑known flow event; rich public data."
+      },
+      "keywords": [
+        "reconstitution",
+        "MOC",
+        "imbalance",
+        "small-cap"
+      ],
+      "expected_horizon_notes": "Backtest 2018–2025 (June).",
+      "citations": [
+        "https://www.bmlltech.com/news/market-insight/into-the-close-unpacking-u-s-closing-auction-dynamics-and-the-impact-of-the-russell-reconstitution"
+      ]
+    }
+  ],
+  "_report_path": "content/reports/20251024-twitter-order-flow-gpt-5-pro.md"
+}

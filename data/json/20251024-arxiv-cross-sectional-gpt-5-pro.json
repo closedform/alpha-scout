@@ -1,0 +1,820 @@
+{
+  "meta": {
+    "source_searched": "arXiv (https://arxiv.org) and SSRN (https://ssrn.com)",
+    "query": "cross-sectional equity anomaly feature engineering factor discovery SSRN",
+    "scan_window": "2005-01-01 - 2025-10-24",
+    "exclusions": [
+      "Crypto and digital assets"
+    ],
+    "report_date": "2025-10-24"
+  },
+  "ideas": [
+    {
+      "title": "Intraday vs. Overnight Mispricing Split",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "Intraday (1-6h)",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Separate intraday and overnight legs for the same characteristic; arbitrage frictions overnight cause predictable day–night divergence across stocks.",
+      "feature_transformations": [
+        "Compute day vs. overnight returns for characteristic-ranked legs; rank-normalize each daily",
+        "Intraday-minus-Overnight spread: z(X)_day − z(X)_overnight",
+        "Systematic-variance split: ratio of overnight to intraday beta-variance as a conditioner"
+      ],
+      "data_dependencies": [
+        "OHLCV with opens/closes",
+        "intraday bars",
+        "market beta estimates"
+      ],
+      "universe_filters": "US top 1000 by ADV; price > $3; ADV > $5M; exclude ADRs/OTC",
+      "directionality": "Cross-sectional ranks; long intraday leg where overnight drag is highest; industry/beta neutral; close before EOD, re-enter on open",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Clear split, standard data, well-documented cross-sectional patterns"
+      },
+      "keywords": [
+        "overnight",
+        "intraday",
+        "mispricing",
+        "beta"
+      ],
+      "expected_horizon_notes": "Backtest 2010–2025 minute bars; monitor 6 weeks live",
+      "citations": [
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2869624"
+      ]
+    },
+    {
+      "title": "Single-Stock VRP Adjusted for Turnover Shocks",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "1-6 Months",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Use realized–implied volatility spread as a cross-sectional predictor but correct realized vol for turnover-induced mean reversion to restore signal power.",
+      "feature_transformations": [
+        "RVol* = realized vol mean-reversion corrected to a 60d median",
+        "VRP* = RVol* − 30D ATM implied vol",
+        "Turnover shock filter: shrink or drop observations with abnormal turnover"
+      ],
+      "data_dependencies": [
+        "Intraday realized vol",
+        "Option IV (30D ATM)",
+        "Daily turnover"
+      ],
+      "universe_filters": "US optionable names; price > $5; ADV > $10M",
+      "directionality": "Rank long high VRP*; short low; monthly rebalance; beta/industry neutral",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Practical improvement on a known options–equity bridge"
+      },
+      "keywords": [
+        "VRP",
+        "implied vol",
+        "realized vol",
+        "turnover"
+      ],
+      "expected_horizon_notes": "Backtest 2012–2025; monthly refresh; 8-week live",
+      "citations": [
+        "https://ssrn.com/abstract=5234112"
+      ]
+    },
+    {
+      "title": "Weekly Realized Skewness Predictor",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "1-5 Days",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Higher recent realized skewness forecasts underperformance next week; use intraday-derived higher moments cross-sectionally.",
+      "feature_transformations": [
+        "Weekly realized skewness from 5m returns; winsorize extremes",
+        "Sector-neutral z-score",
+        "Skew–kurtosis composite: −z(skew) + 0.25*z(kurt)"
+      ],
+      "data_dependencies": [
+        "Intraday bars",
+        "Corporate action adjustments"
+      ],
+      "universe_filters": "Top 1500 by ADV; price > $3",
+      "directionality": "Long lowest-skew quintile; short highest; weekly rebalance",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Replicable with standard HF data; well-documented"
+      },
+      "keywords": [
+        "realized skewness",
+        "intraday",
+        "weekly",
+        "higher moments"
+      ],
+      "expected_horizon_notes": "Backtest 2012–2025; 8-week pilot",
+      "citations": [
+        "https://ssrn.com/abstract=1898735"
+      ]
+    },
+    {
+      "title": "Downside Semivariance Ratio (RDRS) Tilt",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Global Developed",
+      "horizon": "1-6 Months",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "Use the ratio of downside semivariance to total variance to identify stocks with unfavorable downside risk; tilt toward low-RDRS names.",
+      "feature_transformations": [
+        "RDRS(60d) = RSV− / (RSV− + RSV+)",
+        "Sector-time demeaning and z-scoring",
+        "Overlay with downside beta to market drawdowns"
+      ],
+      "data_dependencies": [
+        "Intraday returns",
+        "Market index"
+      ],
+      "universe_filters": "Developed large/mid; price > $5; ADV > $5M",
+      "directionality": "Long low RDRS, short high; monthly rebalance; sector/country neutral",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Technically sound, intuitive, needs HF data"
+      },
+      "keywords": [
+        "downside risk",
+        "semivariance",
+        "intraday",
+        "drawdown"
+      ],
+      "expected_horizon_notes": "Backtest 2015–2025; monthly updates; 12-week live",
+      "citations": [
+        "https://ssrn.com/abstract=4867217"
+      ]
+    },
+    {
+      "title": "Expected Growth (q5) Factor",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Global Developed",
+      "horizon": ">6 Months",
+      "signal_type": "Fundamental",
+      "core_idea": "Forecast expected investment growth from fundamentals and sort cross-sectionally; long high expected growth, short low.",
+      "feature_transformations": [
+        "Cross-sectional forecast of Δ(Investment/Assets) using q, OCF/Assets, ΔROE",
+        "Expected Growth percentile (industry-neutral)",
+        "Combine with profitability and investment into a q5 composite"
+      ],
+      "data_dependencies": [
+        "Quarterly fundamentals",
+        "Prices"
+      ],
+      "universe_filters": "Developed markets; ex-fin/REIT; price > $5",
+      "directionality": "Semiannual rebalance; beta/industry neutral",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Peer-reviewed model; widely accessible inputs"
+      },
+      "keywords": [
+        "expected growth",
+        "investment",
+        "profitability",
+        "q-factor"
+      ],
+      "expected_horizon_notes": "Backtest 2005–2025; 6–12m holds",
+      "citations": [
+        "https://ssrn.com/abstract=3525435",
+        "https://ssrn.com/abstract=3191167"
+      ]
+    },
+    {
+      "title": "Quality-Minus-Junk Composite",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Global Developed",
+      "horizon": ">6 Months",
+      "signal_type": "Cross-Sectional Composite",
+      "core_idea": "Multi-pillar quality (profitability, growth, safety, payout) predicts cross-sectional returns; long high-quality vs. short junk.",
+      "feature_transformations": [
+        "Profitability (GP/A, ROA), Growth (ΔROA, ΔGP/A), Safety (low leverage/vol/beta), Payout (net issuance)",
+        "Rank-average pillars into QMJ",
+        "Industry-neutral scoring"
+      ],
+      "data_dependencies": [
+        "Fundamentals",
+        "Prices",
+        "Shares outstanding"
+      ],
+      "universe_filters": "Global ex-fin/REIT; cap > $500M; ADV > $2M",
+      "directionality": "Quarterly rebalance; beta neutral",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Extensively replicated; straightforward"
+      },
+      "keywords": [
+        "quality",
+        "profitability",
+        "safety",
+        "payout"
+      ],
+      "expected_horizon_notes": "Backtest 2005–2025; quarterly",
+      "citations": [
+        "https://ssrn.com/abstract=2312432"
+      ]
+    },
+    {
+      "title": "Asset Growth / Investment-to-Assets",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Global Developed",
+      "horizon": ">6 Months",
+      "signal_type": "Fundamental",
+      "core_idea": "High recent asset growth predicts lower future returns; use Inv/A and combine with profitability to improve efficacy.",
+      "feature_transformations": [
+        "Inv/A = (Assets_t − Assets_{t−1})/Assets_{t−1}",
+        "Overlay net issuance",
+        "Sector-relative z-scoring"
+      ],
+      "data_dependencies": [
+        "Quarterly fundamentals",
+        "Shares"
+      ],
+      "universe_filters": "Ex-fin; cap > $300M",
+      "directionality": "Short high Inv/A; long low; quarterly rebalance",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Simple, capacity friendly, robust"
+      },
+      "keywords": [
+        "investment",
+        "asset growth",
+        "fundamentals"
+      ],
+      "expected_horizon_notes": "Backtest 2005–2025; semiannual holds",
+      "citations": [
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2508322"
+      ]
+    },
+    {
+      "title": "Equity Loan Fee / Borrow Cost Tilt",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Global Developed",
+      "horizon": "1-4 Weeks",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "High loan fees signal contemporaneous short demand and predict short-horizon underperformance; sort by fee level and change.",
+      "feature_transformations": [
+        "Fee level z(7d) and ΔFee(7d) composite",
+        "Interact with DTC and Amihud for squeeze risk",
+        "Exclude extreme-fee tails for cost control"
+      ],
+      "data_dependencies": [
+        "Securities lending fees",
+        "Short interest",
+        "Turnover"
+      ],
+      "universe_filters": "Cap > $1B; lendable; ADV > $5M",
+      "directionality": "Short high-fee; long low-fee; weekly rebalance",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Direct microstructure signal with short horizon"
+      },
+      "keywords": [
+        "shorting",
+        "loan fee",
+        "borrow",
+        "microstructure"
+      ],
+      "expected_horizon_notes": "Backtest 2012–2025; weekly",
+      "citations": [
+        "https://papers.ssrn.com/sol3/Delivery.cfm/3707166.pdf?abstractid=3707166",
+        "https://ssrn.com/abstract=3726227"
+      ]
+    },
+    {
+      "title": "Days-to-Cover Short Interest",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Mid-Cap",
+      "horizon": "1-4 Weeks",
+      "signal_type": "Microstructure/Order-Flow",
+      "core_idea": "DTC = short interest / ADV is a better marginal shorting-cost proxy than raw SI; high-DTC names underperform.",
+      "feature_transformations": [
+        "Compute DTC and sector-neutral z",
+        "DTC × Amihud interaction",
+        "ΔDTC timing overlay"
+      ],
+      "data_dependencies": [
+        "Short interest",
+        "ADV",
+        "Prices"
+      ],
+      "universe_filters": "US 1,000–3,000 by cap; exclude < $300M",
+      "directionality": "Short high-DTC; long low; weekly",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Simple, public, robust interpretation"
+      },
+      "keywords": [
+        "short interest",
+        "days-to-cover",
+        "liquidity"
+      ],
+      "expected_horizon_notes": "Backtest 2006–2025; 1–4w holds",
+      "citations": [
+        "https://ssrn.com/abstract=2607356"
+      ]
+    },
+    {
+      "title": "MAX / β–MAX Lottery Control",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Small-Cap",
+      "horizon": "1-4 Weeks",
+      "signal_type": "Mean-Reversion",
+      "core_idea": "Extreme prior single-day winners (MAX) underperform; β-adjusted MAX refines the signal by controlling for market spikes.",
+      "feature_transformations": [
+        "MAX(1m) = max daily return over 21d",
+        "β–MAX (residualized/divided by beta)",
+        "Persistence flag from prior months"
+      ],
+      "data_dependencies": [
+        "Daily returns",
+        "Market returns",
+        "Rolling beta"
+      ],
+      "universe_filters": "Small/micro; price > $3; ADV > $1M",
+      "directionality": "Short top decile β–MAX; long bottom; weekly",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Known effect with improved specification"
+      },
+      "keywords": [
+        "lottery",
+        "MAX",
+        "skewness",
+        "reversal"
+      ],
+      "expected_horizon_notes": "Backtest 2007–2025; 1–4w holds",
+      "citations": [
+        "https://papers.ssrn.com/sol3/Delivery.cfm/nber_w14804.pdf?abstractid=1366204",
+        "https://ssrn.com/abstract=5030210"
+      ]
+    },
+    {
+      "title": "Idiosyncratic Volatility Tilt",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "1-6 Months",
+      "signal_type": "Fundamental",
+      "core_idea": "High-IVOL names underperform; use model-residual variance to sort; strength varies across venues.",
+      "feature_transformations": [
+        "IVOL(6m) from daily residuals of FF6 or q5",
+        "Stability filter for betas/IVOL",
+        "Combine with short-interest information"
+      ],
+      "data_dependencies": [
+        "Daily returns",
+        "Factor returns"
+      ],
+      "universe_filters": "US large/mid; price > $5",
+      "directionality": "Long low-IVOL; short high; monthly",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Time-varying strength; useful as risk tilt"
+      },
+      "keywords": [
+        "idiosyncratic volatility",
+        "residual risk"
+      ],
+      "expected_horizon_notes": "Backtest 2005–2025; quarterly checks",
+      "citations": [
+        "https://ssrn.com/abstract=3455609"
+      ]
+    },
+    {
+      "title": "Betting Against Beta (Low-Risk)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Global Developed",
+      "horizon": "1-6 Months",
+      "signal_type": "Cross-Sectional Composite",
+      "core_idea": "Constraints cause high-beta overpricing and low-beta underpricing; build a beta-neutral long-low/short-high portfolio.",
+      "feature_transformations": [
+        "Shrinkage beta estimates from 2–5y daily returns",
+        "Risk-scaled leg weights (∝ 1/β and −β)",
+        "Optional stochastic-dominance filter"
+      ],
+      "data_dependencies": [
+        "Daily returns",
+        "Index returns"
+      ],
+      "universe_filters": "Global large/mid; liquid",
+      "directionality": "Monthly rebalance; beta, sector, country neutral",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Deep literature, scalable"
+      },
+      "keywords": [
+        "beta",
+        "low-risk",
+        "constraints",
+        "leverage"
+      ],
+      "expected_horizon_notes": "Backtest 2005–2025; monthly",
+      "citations": [
+        "https://papers.ssrn.com/sol3/Delivery.cfm/nber_w16601.pdf?abstractid=1723048",
+        "https://ssrn.com/abstract=1585031"
+      ]
+    },
+    {
+      "title": "Analyst Target-Price Implied Return (Bias-Adjusted)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "1-4 Weeks",
+      "signal_type": "Event-Driven",
+      "core_idea": "Debias TPIR for optimism and risk misestimation using IVOL/beta and forecast errors; residual TPIR predicts returns.",
+      "feature_transformations": [
+        "TPIR = (Target − Price)/Price",
+        "Bias model residual TPIR_adj (controls: β, IVOL, EPS errors)",
+        "ΔTPIR around revisions as event kicker"
+      ],
+      "data_dependencies": [
+        "IBES targets & EPS",
+        "Prices",
+        "Betas"
+      ],
+      "universe_filters": "US large; coverage ≥3 analysts",
+      "directionality": "Rank long high TPIR_adj; short low; 1–4w holds",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Cleaner information extraction from targets"
+      },
+      "keywords": [
+        "analysts",
+        "target price",
+        "revisions",
+        "bias"
+      ],
+      "expected_horizon_notes": "Backtest 2010–2025; 1–20d windows",
+      "citations": [
+        "https://ssrn.com/abstract=2412813",
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2516937"
+      ]
+    },
+    {
+      "title": "Analyst Forecast Skewness",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "1-4 Weeks",
+      "signal_type": "Sentiment",
+      "core_idea": "Asymmetric EPS forecast distributions (skewness) predict cross-sectional returns; positive skew often precedes underperformance.",
+      "feature_transformations": [
+        "Estimate skewness of current-fiscal EPS estimates",
+        "Control for dispersion (STD)",
+        "Change in skewness around guidance"
+      ],
+      "data_dependencies": [
+        "Analyst estimate distributions",
+        "Prices"
+      ],
+      "universe_filters": "Coverage ≥5; price > $5",
+      "directionality": "Short high-skew; long low/negative; weekly",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Low-dimensional, widely available data"
+      },
+      "keywords": [
+        "analyst skewness",
+        "sentiment",
+        "disagreement"
+      ],
+      "expected_horizon_notes": "Backtest 2010–2025; weekly",
+      "citations": [
+        "https://papers.ssrn.com/sol3/Delivery.cfm/SSRN_ID2602731_code1745712.pdf?abstractid=2602731"
+      ]
+    },
+    {
+      "title": "Conference Call Tone × Credibility",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "1-5 Days",
+      "signal_type": "Sentiment",
+      "core_idea": "Tone predicts event-window returns but depends on speaker/message credibility; use a tone×credibility interaction for selection.",
+      "feature_transformations": [
+        "LM-based tone on transcripts (Q&A, prepared)",
+        "Credibility proxy from linguistic markers and manager traits",
+        "Tone_cred = Tone × Credibility"
+      ],
+      "data_dependencies": [
+        "Call transcripts",
+        "LM dictionary",
+        "NLP pipeline"
+      ],
+      "universe_filters": "S&P 1500 with regular calls",
+      "directionality": "Long positive Tone_cred; short negative; 1–5d exits",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Enhancement over raw tone; tight horizons"
+      },
+      "keywords": [
+        "earnings calls",
+        "tone",
+        "NLP",
+        "credibility",
+        "event"
+      ],
+      "expected_horizon_notes": "Backtest 2012–2025; event framework",
+      "citations": [
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1625863",
+        "https://papers.ssrn.com/sol3/Delivery.cfm/SSRN_ID4520536_code3532039.pdf?abstractid=4520536"
+      ]
+    },
+    {
+      "title": "10‑K Text Negativity/Uncertainty Tilt",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "1-6 Months",
+      "signal_type": "Sentiment",
+      "core_idea": "Finance-specific negative/uncertainty lexicons applied to 10‑Ks predict weaker post-filing returns; trade changes in tone.",
+      "feature_transformations": [
+        "LM Negative/Uncertainty normalized by length",
+        "MD&A weighting",
+        "ΔTone vs. prior filing"
+      ],
+      "data_dependencies": [
+        "EDGAR 10‑Ks",
+        "LM dictionary"
+      ],
+      "universe_filters": "US large/mid; annual",
+      "directionality": "Short increased negativity; long improvements",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Public data, robust construction, low turnover"
+      },
+      "keywords": [
+        "10‑K",
+        "LM dictionary",
+        "sentiment",
+        "filings"
+      ],
+      "expected_horizon_notes": "Backtest 2006–2025; 6–12m hold",
+      "citations": [
+        "https://ssrn.com/abstract=1331573"
+      ]
+    },
+    {
+      "title": "Employee (Glassdoor) Sentiment Factor",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Global Developed",
+      "horizon": ">6 Months",
+      "signal_type": "Alternative Data",
+      "core_idea": "Improvements in employee sentiment, especially text-based beyond stars, forecast returns; emphasize current-employee reviews and early reviewers.",
+      "feature_transformations": [
+        "BERT/LM sentiment on reviews",
+        "ΔSentiment(6m) with early review weighting",
+        "HQ proximity weight"
+      ],
+      "data_dependencies": [
+        "Glassdoor reviews (text+meta)",
+        "Ticker mapping"
+      ],
+      "universe_filters": "Large/mid with ≥50 reviews/yr",
+      "directionality": "Long improving; short deteriorating; quarterly/annual",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Multiple corroborating studies; coverage variance"
+      },
+      "keywords": [
+        "employee sentiment",
+        "Glassdoor",
+        "text",
+        "culture"
+      ],
+      "expected_horizon_notes": "Backtest 2014–2025; quarterly",
+      "citations": [
+        "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2054066",
+        "https://ssrn.com/abstract=5135457",
+        "https://papers.ssrn.com/sol3/Delivery.cfm/SSRN_ID4631233_code3973152.pdf?abstractid=4631233"
+      ]
+    },
+    {
+      "title": "Product-Market Links & Scope Similarity Spillovers",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Global Developed",
+      "horizon": "1-3 Days",
+      "signal_type": "Momentum",
+      "core_idea": "Returns and news of economically linked firms (customers/suppliers/scope-similar) diffuse with a lag; propagate shocks to peers.",
+      "feature_transformations": [
+        "Peer set via 10‑K text similarity or customer mapping",
+        "Peer momentum over prior 1–2d",
+        "Visibility filter to focus on underreaction"
+      ],
+      "data_dependencies": [
+        "Hoberg–Phillips text or Compustat Segments",
+        "Daily returns"
+      ],
+      "universe_filters": "US + Developed; cap > $1B",
+      "directionality": "Long positive-spillover peers; short negative; 1–3d hold",
+      "strength_actionability": {
+        "rating": "Strong",
+        "rationale": "Robust effect with multiple datasets"
+      },
+      "keywords": [
+        "customer–supplier",
+        "text similarity",
+        "lead–lag",
+        "spillover"
+      ],
+      "expected_horizon_notes": "Backtest 2005–2025; daily",
+      "citations": [
+        "https://ssrn.com/abstract=2758776",
+        "https://ssrn.com/abstract=5016418"
+      ]
+    },
+    {
+      "title": "News-Link Momentum",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Global Emerging",
+      "horizon": "1-3 Days",
+      "signal_type": "Momentum",
+      "core_idea": "Co-mentioned firms in news show lead–lag; trade underreacting followers after leader moves.",
+      "feature_transformations": [
+        "Co-mention graph from financial news",
+        "Leader’s 1–3d return projected to followers",
+        "Underreaction threshold for entry"
+      ],
+      "data_dependencies": [
+        "News feed (Reuters/Dow Jones)",
+        "Ticker NLP"
+      ],
+      "universe_filters": "Coverage-rich listings; cap > $1B",
+      "directionality": "Long predicted followers; short negative spillovers",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Clear construction; short holding period"
+      },
+      "keywords": [
+        "news",
+        "co-mention",
+        "attention",
+        "lead–lag"
+      ],
+      "expected_horizon_notes": "Backtest 2014–2025; 30–90d link windows",
+      "citations": [
+        "https://ssrn.com/abstract=4766194"
+      ]
+    },
+    {
+      "title": "ETF Flow Pressure on Constituents",
+      "verification_status": "Partially Verified (secondary references)",
+      "equity_class": "Equity ETFs (US broad and sector) and their constituents",
+      "horizon": "1-3 Days",
+      "signal_type": "Event-Driven",
+      "core_idea": "Large ETF creations/redemptions transmit temporary price pressure to constituents; mean-reversion follows extreme primary activity.",
+      "feature_transformations": [
+        "ΔShares Outstanding (1–3d) as primary activity proxy",
+        "Allocate flow to constituents by index weights",
+        "Constituent pressure vs. non-ETF peers to form a reversal score"
+      ],
+      "data_dependencies": [
+        "ETF shares outstanding",
+        "Constituent weights",
+        "Prices"
+      ],
+      "universe_filters": "US ETFs (e.g., SPY, sector ETFs) and S&P 1500 constituents",
+      "directionality": "Short flow-pushed up constituents; long dragged down; T+1–T+2 exit",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Promising around extremes; data access varies"
+      },
+      "keywords": [
+        "ETF flows",
+        "creations/redemptions",
+        "pressure",
+        "reversal"
+      ],
+      "expected_horizon_notes": "Backtest 2012–2025; ±3d event windows",
+      "citations": [
+        "https://papers.ssrn.com/sol3/Delivery.cfm/nber_w20071.pdf?abstractid=2430066",
+        "https://papers.ssrn.com/sol3/Delivery.cfm/4804048.pdf?abstractid=4804048"
+      ]
+    },
+    {
+      "title": "Passive Ownership–Conditioned Reversal",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Large-Cap",
+      "horizon": "1-3 Days",
+      "signal_type": "Mean-Reversion",
+      "core_idea": "Short-term reversal is stronger among stocks with higher passive ETF ownership; condition reversal weights on passive share.",
+      "feature_transformations": [
+        "Passive ownership % from ETF ownership data",
+        "Reversal based on prior 1–2d returns",
+        "Amihud control to avoid liquidity traps"
+      ],
+      "data_dependencies": [
+        "ETF ownership data",
+        "Prices",
+        "Floats"
+      ],
+      "universe_filters": "US large/mid; price > $5",
+      "directionality": "Overweight reversal in high-passive names; 1–2d holds",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Structural conditioning boosts a classic signal"
+      },
+      "keywords": [
+        "passive ownership",
+        "reversal",
+        "ETF"
+      ],
+      "expected_horizon_notes": "Backtest 2012–2025; daily",
+      "citations": [
+        "https://papers.ssrn.com/sol3/Delivery.cfm/4567751.pdf?abstractid=4567751"
+      ]
+    },
+    {
+      "title": "Industry-Level Customer→Supplier Momentum (Global)",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "Global Developed",
+      "horizon": "1-4 Weeks",
+      "signal_type": "Momentum",
+      "core_idea": "Customer industries’ recent returns lead supplier industries; trade supplier baskets accordingly, focusing on smaller, relationship-intensive suppliers.",
+      "feature_transformations": [
+        "Map GICS industries to customer–supplier",
+        "Customer 4w return vs. market",
+        "Relationship-specificity weighting"
+      ],
+      "data_dependencies": [
+        "Industry returns",
+        "Input–output links"
+      ],
+      "universe_filters": "Developed markets; liquid industries",
+      "directionality": "Tilt supplier baskets with 2–4w holds",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Tradable via baskets/ETFs"
+      },
+      "keywords": [
+        "supply chain",
+        "industry momentum",
+        "lead–lag"
+      ],
+      "expected_horizon_notes": "Backtest 2005–2025",
+      "citations": [
+        "https://papers.ssrn.com/sol3/Delivery.cfm/SSRN_ID2686904_code2034340.pdf?abstractid=2385217"
+      ]
+    },
+    {
+      "title": "Amihud Down-Day Illiquidity Premium",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Small-Cap",
+      "horizon": "1-6 Months",
+      "signal_type": "Fundamental",
+      "core_idea": "Down-day Amihud component commands the cross-sectional premium; prefer names with lower down-day price impact.",
+      "feature_transformations": [
+        "Amihud− (negative-return days)",
+        "Amihud−/Amihud split ratio",
+        "Size-conditioned scoring"
+      ],
+      "data_dependencies": [
+        "Daily prices",
+        "Volumes"
+      ],
+      "universe_filters": "US small/mid; price > $3",
+      "directionality": "Long low Amihud−; short high; monthly",
+      "strength_actionability": {
+        "rating": "Promising",
+        "rationale": "Daily data; intuitive downside focus"
+      },
+      "keywords": [
+        "illiquidity",
+        "Amihud",
+        "downside",
+        "microstructure"
+      ],
+      "expected_horizon_notes": "Backtest 2005–2025; monthly",
+      "citations": [
+        "https://papers.ssrn.com/sol3/Delivery.cfm/SSRN_ID2034037_code2026.pdf?abstractid=1859632"
+      ]
+    },
+    {
+      "title": "Local Downside Beta Premium",
+      "verification_status": "Verified (direct link)",
+      "equity_class": "US Mid-Cap",
+      "horizon": "1-6 Months",
+      "signal_type": "Fundamental",
+      "core_idea": "Stocks with higher sensitivity to local-market downturns earn higher returns; estimate local downside beta and tilt.",
+      "feature_transformations": [
+        "Local downside beta to regional index (returns < 0)",
+        "Interaction with local investor presence",
+        "Region/sector-neutral z"
+      ],
+      "data_dependencies": [
+        "Stock returns",
+        "Local index returns",
+        "HQ location"
+      ],
+      "universe_filters": "US & multi-region listings; cap > $1B",
+      "directionality": "Long high local-downside-beta names; hedge market beta",
+      "strength_actionability": {
+        "rating": "Tentative",
+        "rationale": "Newer result; ensure orthogonality to standard factors"
+      },
+      "keywords": [
+        "downside beta",
+        "local bias",
+        "risk premium"
+      ],
+      "expected_horizon_notes": "Backtest 2008–2025; quarterly",
+      "citations": [
+        "https://ssrn.com/abstract=5019010"
+      ]
+    }
+  ],
+  "_report_path": "content/reports/20251024-arxiv-cross-sectional-gpt-5-pro.md"
+}
